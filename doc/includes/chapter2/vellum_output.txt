@@ -1,0 +1,26 @@
+zedshaw@timmy[chapter2]|2> vellum
+BUILDING: ['hello']
+-->: hello
+ sh: "echo 'hi'"
+hi
+
+### @export "-T after dependency"
+zedshaw@timmy[chapter2]|3> vellum -T
+OPTIONS:
+{...}
+
+TARGETS:
+hello:	['py.hello', 'hello']
+py.hello:	['py.hello']
+
+DEFAULT: hello
+
+### @export "run after dependency"
+zedshaw@timmy[chapter2]|4> vellum
+BUILDING: ['py.hello', 'hello']
+-->: py.hello
+ py: "print 'hello from python'"
+hello from python
+-->: hello
+ sh: "echo 'hi'"
+hi

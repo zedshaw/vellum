@@ -1,0 +1,2550 @@
+\include{preamble}
+\include{styles/emacs}
+\include{commands}
+\usepackage{draftcopy}
+
+\title{
+    The Ways Of Vellum\\
+    {\it Automation Design Patterns For "Making The Sausage"}
+}
+\author{Zed A. Shaw}
+\date{Apr 2008}
+
+\begin{document}
+
+\maketitle
+
+\pagenumbering{roman}
+
+
+
+
+\chapter*{Preface}
+
+\versal{T}his book will teach you about Vellum, and indirectly teach you about
+automating your daily work as a programmer.  I've found over the years that
+automating what I do all day long is the single quickest way to improve my
+efficiency.  Finding that tool or tiny script that makes mundane tasks go away
+is very rewarding.  Sometimes, the automation makes you a super hero in the eyes
+of programmers who missed out on this secret.
+
+When I wrote Mongrel I used Rake to automate nearly everything I did.  I ran
+unit tests, deployed it, started servers in clusters, thrashed it with fuzzing,
+and even built the core of Mongrel with a parser generator named Ragel.  Using
+tools to create code that I'd normally make by hand made it possible for me to
+crank out a complete web server for multiple Ruby web frameworks in a matter of
+months.
+
+Yet, I still see programmers--myself included--avoiding automation as if it is
+a burden.  They groan when they're asked to make a script to administer a
+system.  They whine when there's a chance to turn deployment into a solution.
+Daily task automation is seen as a boring task similar to taxes and accounting.
+
+I think bad tools are to blame for programmers (and system administrators
+especially) avoiding ruthless automation in their daily work.  Take a
+look at Make and its followers.  Ever tried to list the available targets in a
+Makefile?  How about just the wide range of different configuration files many
+systems have (if they have those even).  Tools like cfengine are so complicated
+you need a Ph.D. in Theoretical Cognitive Science to make them work reliably.
+Everything about the business of removing the human is blocked by gross
+interconnects realized as ugly configuration files.  No wonder programmers avoid
+it.
+
+For years I've wanted to make a build tool.  Call me weird, but I've always
+enjoyed removing useless work and the useless people who surround easily
+automated useless work.  Vellum is the start of that build tool.  It's
+especially important because it first focuses on a task that has always been
+hairy and ugly:  Automating the build of books with LaTeX.  The idea is that if
+Vellum can make tangling together a book about software (like this one) then it
+can probably automate just about anything.
+
+Building books isn't the only thing Vellum does, it's just the first problem I
+solved with it.  In the process of automating the creation of this book, I also
+used Vellum to crank out builds and releases of Vellum itself, Idiopidae, my
+website, and many other open source projects I created.  Vellum hasn't failed me
+yet (although, that's because I just fix it to not fail).
+
+Hopefully you like my little book, and since it's free I will gladly refund your
+purchase price to you.
+
+
+
+\chapter*{Typography}
+
+\versal{I} used quite a few tools while making this book, including Vellum
+itself.  Each of these tools was designed specifically to help in the creation
+of books "by programmers for programmers".  I release all of these tools as
+GPLv3 licensed projects that anyone is free to use to do something similar.
+\footnote{The works you create obviously do not need to be licensed under the
+    GPL.}
+
+Here's the big list of all the things I used when preparing this book, so you
+can judge how well it fits in with your own mode of operation. \footnote{Yes,
+this combination is weird, but as you'll see later that's on purpose.}
+
+\begin{description}
+\item[TeX Live] A very well put together and community maintained version of TeX
+(and LaTeX).
+\item[Idiopidae] My project for mixing code and prose together.  Think of it as
+a compiler for people who have to write about code.
+\item[Vellum] Well, the build tool this book is all about.
+\item[Pygments] A very nice Python library that converts code to various
+formats.  Used to make the very nice code samples.
+\item[ArchLinux] My main desktop machine.  Sucks for media, but awesome for
+code.
+\item[Awesome Window Manager] Someone who's fucking awesome should use a fucking awesome window
+manager.  That window manager is Awesome.
+\item[Vim] The entire set of software was written using Vim, including all the
+software projects and the LaTeX source.
+\item[evince] A very good PDF and PS viewer for working on LaTeX documents
+\item[IPython] The IPython shell is a great alternative to Python's default
+REPL, but it has this great feature where you can merge into it regular shell
+operations by running \verb|ipython -p pysh|.  This is weird at first, but
+eventually it really grows on you having Python and shell all in the same
+terminal merged together.  In the examples below when you see a shell it's a
+cut-paste from an IPython shell session.  This is also why you might see some
+Python typed into the shell where appropriate.
+\end{description}
+
+
+\section*{Unusual Conventions}
+
+I started Vellum shortly after PyCon2008 so I could work on a book, but not just
+any book, the Great American Code Novel.  I wanted my book to be about the code
+for a project, and that meant making the code easy to include in the book and
+look gorgeous.  While working on the problem of including code, I found that
+even the venerable TeX sucked for writing books with lots of code.
+
+After months of trying various tools and reading the writings of other people
+who've worked on the problem I came to the realization that I should just write
+something.  Then at PyCon at a dinner with many other Addison/Wesley authors, we
+came this conclusion:
+
+\begin{quote}
+Every author writes a "book making" tool set, says it sucks, and never releases it.
+\end{quote}
+
+With that in mind I became determined to create a set of tools to help
+programmer authors document their gear.  The problem of building a book about
+code could be solved with some simple tools for building, formatting, and
+sharing, but it also needed more research and experimentation.
+
+While writing this book I came to realize that a number of TeX features are
+actually quite irritating for books about code.  For books about mathematics
+they're great, but for code they make following the discussion difficult.
+
+When reading this book, keep these typographical "conventions" in mind, as
+they're different from the ones you find in other books:
+
+\begin{description}
+\item[There are no floats of code in this book.]  A float is a logical table or figure
+that relies on TeX's algorithms to determine placement.  When discussing a piece
+of software this is annoying because the prose becomes disconnected from the
+section of code being discussed.  Instead, in this book the code is just merged
+into the prose to look like a float, but it's actually placed right there.
+\item[Code is syntax highlighted]. All code is formatted with color in the PDF
+form the way it would be in many editors.  If you print it the book may look
+wrong or be impossible to read.
+\item[Sections of referenced code have logical names.] A major problem when
+reading through a book with lots of code is finding a snippet later.  You can
+find all the code in this book via a simple format of \file{file.ext:section}
+and each code block has a more descriptive comment to aid in searching.  If you
+need to find in the Vellum source where \file{press.py:1} is located, then it's
+the first line of \file{press.py}.  If you need to find where
+\file{press.py:load} is then search for \ident{export "load"} in
+\file{press.py}.
+\item [Code sections are bounded by graphics.]  Each code section ends with a {$\hookleftarrow$} in the right margin and has line numbers in
+the left margin.  They also have a fancy \ovalbox{oval box headers} with all the
+code snippet's information like the file and section and short description.
+\item [All code runs and is tested.] The code is actually fully functional and taken out of an active project,
+    so if it differs from the prose then the code is right.
+\end{description}
+
+Otherwise, I let LaTeX format everything the way it wanted, with just a few
+logical modifications to highlight \ident{identifiers} and \file{files}.
+
+
+
+
+\chapter*{Terminology}
+
+\versal{T}here are some simple terms you should know before reading this book, but if
+you're experienced at build automation then you can skip this section.
+
+\begin{description}
+\item [build tool] A tool that automates some process in a particular order.
+Just about anything can be a build tool.
+\item [declarative logic]  This is a style of logic where, instead of telling a
+computer \emph{how} to do something you tell a computer \emph{what} to do.
+That's the classic definition, but many times this means translating incremental
+reasonable processes into obnoxious convoluted tree structures just to keep a
+computer happy.
+\item [lists and dicts] Python has two primary data structures of lists and
+dicts.  In other languages these might be called "arrays and hashes" or "lists
+and hashtables" or even just "associative arrays" for both.
+\end{description}
+
+
+
+\chapter*{Quick Tour}
+
+\versal{T}his book is organized from least detailed to most detailed information on using
+Vellum to get things done.  There isn't theory in Artificial Intelligence or
+declarative logic programming systems.  It just tells you how to get your job
+done in the cleanest nicest way.
+
+Since many times you approach Vellum only when you really get tired of typing
+commands and you've got very little time to stop and sharpen your knives, I've
+
+
+done you a favor and described all the chapters.  Start wherever you want,
+although the book is small enough you could read it all and be a grand
+master.
+
+\begin{description}
+\item [Introduction] This chapter right here, I hope you like it.
+\item [Starting] If you have to read just one chapter before your whole
+company catches on fire, then this is the one.  You can probably do 90\% of your
+work with just this chapter.
+\item [Running] More of a reference chapter that covers all the command line
+options, what they do, available commands, and how to do common tasks like find
+targets that mention a command.
+\item [Building] In depth coverage of the Vellum syntax, how to structure a
+build, debugging the build, and making your build specifications modular.  It
+also gives a complete example of doing a complex build.
+\item [Debugging] Helpful tips and tricks for figuring out what's wrong with a
+Vellum build.
+\item [Extending] Advanced extension techniques for creating your own commands
+and packaged recipes.  This is the chapter to read if you want to standardize
+your builds for other future projects.
+\item [Embedding] Quick overview of the API and implementation of Vellum then a
+sample of embedding Vellum's engine in your own software.  In this case we make
+a simple distributed build tool.
+\item [Contributing]  Simple instructions on the Vellum code standards, a crash
+course in Bazaar and Launchpad, and how to contact me (Zed) to give back.
+\item [Appendix A: The Code] A full in depth run through Vellum's code so you
+can get started hacking on it.  The code is small so this is a fairly easy tour.
+\item [Appendix B: Converting From Make] A case study of converting from CMake
+and regular Make on two projects.
+\end{description}
+
+If you're in a hurry and want to get automating right away then just go to
+Chapter \ref{chapter:Starting}.  It has enough information, and as you work you
+can refer to Chapter \ref{chapter:Running} to figure out how Vellum works.
+
+More serious build commanders will want to read the whole book from front to
+back.  It's not a large book so it shouldn't take you long.
+
+\tableofcontents
+%\listoffigures
+%\listoftables
+\pagenumbering{arabic}
+
+
+
+\chapter{Introduction}
+\label{chapter:Introduction}
+
+\versal{P}utting software together is an ugly task.  Down right disgusting in
+some parts of the world.  Depending on the size of the project you could be
+dealing with chains of files that must be carefully coaxed through various
+compilers, linkers, loaders, analyzers, and generators.  Any tiny misstep and
+the software is busted.  This is just to run the program to see if your changes
+worked, not even to package it for sales and marketing to shove off to people.
+
+I've been building software for years, and on every project I've created the
+same bags of custom shell scripts and "Make-like-files" to automate the build
+and deployment.  Whether the task is just compiling everything or pushing out
+new deployments the end result is the same: A high pile of crap.  What I've
+always wanted was a simple solution that could eliminate or greatly reduce the
+dung pile on my next project.
+
+I thought that solution was Rake, until I used it on a fairly large enterprise
+project initially run by a bunch of morons.  What I found is that Rake's easy
+access to Ruby meant that all the problems of Ruby meta-programming were there
+in my builds.  At any moment I could be hit by a landmine of stupid where
+someone reshuffled the build without telling me.  In one case, I spent the
+better part of 3 days figuring out that some jerk had just replaced the default
+Rails test task with his own special sauce that didn't work.  He did it with a
+monkey patch\footnote{That's an evil practice in the Ruby world where novices
+    try to be like their heroes and do all software modification via indirect
+        surgery on the class hierarchy rather than just plain old objects.}, 
+in a hidden directory, many levels down, and no comments.
+
+What I wanted from a build tool is something tiny and easy to understand, no
+real magic in it, not entirely declarative, and with consistent build
+specifications between projects.  This meant that upon joining a new team you
+could understand the build without having to troll through mountains of code
+deciphering some idiot's version of Prolog\footnote{If you've ever used
+    Capistrano, you know what I mean}.
+It also meant the tool needed to have a set of constraints that kept things
+consistent without causing too much inconvenience.
+
+Vellum is my attempt at this tool.  It is still a work in progress, but it does
+encode all the various bits of knowledge and experience I've gained from
+building things.  Not so much the actual writing of software, but the mundane
+dumbness of putting all the pieces other people wrote into something a regular
+Joe can use.  Just a simple tool that a programmer can understand in an evening
+and start using right away\footnote{Because we all know programmers never use
+    anything without reading the code first.}.
+
+
+
+
+\section{Why Software Automation Sucks}
+
+I've been fascinated by why system automation, particularly building software,
+is so ugly.  It seems whenever you need to automate a task that involves
+different systems the resulting software \emph{must} violate every software
+design best practice.  Whether that's a data munging process, an automated
+deployment, or a simple C project build.
+
+I blame the state of system automation on four converging factors that amplify the
+suckitude of the whole situation:
+
+\begin{enumerate}
+\item It's always a last minute afterthought done out of necessity.
+\item It's different every time for every person on every project.
+\item The tools available are just too damn hard to understand.
+\item There is no "Automation Design Patterns" book to use as a guide for best
+practices.
+\end{enumerate}
+
+This lack of planning, repeatability, and simplicity with no experienced guide
+book turns what should be a fairly simple automation task into something very
+difficult.
+
+Let's analyze venerable Make as the proposed "tool to end all build tools" for a
+minute:
+
+\begin{enumerate}
+\item It was written in the 70's to help build complex compiled language
+programming projects.
+\item It uses a weird declarative execution process that is file centric and so
+convoluted it can't even list the available targets you can use.
+\item It assumes that the result of every command execution is a single output file.
+\item There are many different incompatible versions of Make that all have slightly different features.
+\item There are no good books for Make other than an ancient O'Reilly book.
+\item It has no standard construction so every build is totally different for
+every project.
+\item You don't have access to a real programming language.
+\end{enumerate}
+
+In all honesty I've \emph{never} seen a nice Makefile.  They're always ugly,
+convoluted, confusing, and hard as hell to trace through.  Make doesn't help
+because it's missing features you'd need to analyze a Makefile like listing
+available targets, searching for targets containing commands, or even just
+visualizing the \emph{whole} structure includes and all.  Instead, every
+person who debugs a Makefile ends up running targets and scanning through
+includes looking for some messed up spacing on a dependency that causes
+silent errors.
+
+Make and all the similar build tools are stuck in an age where just getting a
+program to run was a painful thing involving many shell commands.  People were
+very happy to just get a tool that helped stage and organize this alone.  In
+fact, a Makefile is almost analogous to the plain old interpreter used by modern
+languages like Python, Ruby, Scheme, Lisp, Lua, and Forth.  Makefiles are the C
+programmer's REPL\footnote{Read-Evaluate-Print Loop} and interpreter.
+
+If it's the case now that modern programming languages don't necessarily need a
+tool like make, then what do they need?
+
+
+
+
+\section{What Is Vellum Really?}
+
+Vellum is my attempt at a modern tool for automating modern software
+projects.  If you're a hardcore C programmer working on 100,000,000 lines of C
+code with a mix of C++ for the GUI and Perl holding it all together then Vellum
+is not for you.  If you're starting a new project in a nice language that is
+interactive and doesn't require endless compile processes then Vellum might be
+just you need.  In this latter case it means your problems are now more about
+project management and automating implied social process your team has (then
+using those processes on further projects).
+
+Let us compare the environment for make's genesis and what we have now:
+
+\begin{enumerate}
+\item Modern languages have some form of REPL and self-compiling behavior for
+fast interactive testing and programming.
+\item Many languages have extensive test suites that are run easily without
+build steps.
+\item Modern scripting languages are easily accessible from within the build
+tool so no excuse for not providing access to the raw language.
+\item Simply building a binary is not enough, the build tool now has to update
+bug lists, project pages, build manuals, automatically check out from a source
+repository, do automated regression suites, \emph{and} all reliably.
+\item Did I mention source repositories?  When make was invented there weren't
+too many of these, and those that were there sucked badly or weren't even
+network aware.
+\item It's a scary world now full evil hackers \footnote{I use "hacker" in the sense
+    of a person breaking into a computer for criminal purposes.  The fashionable
+        term "cracker" is racist to white people.} looking to make a name for
+themselves.  Trusting a giant pile of autoconf or even a full
+programming language like in SCons and Rake is dangerous.  Not being
+able to easily look for bad things doesn't help.
+\item Software tools are more complex producing various outputs and using
+multiple inputs.  LaTeX alone produced close to 9 files just when making this
+book.  This makes using a file-centric build tool like make a huge pain since it
+assumes that one file comes out of one file going in.  Even SCons has problems
+with this.
+\end{enumerate}
+
+With these changes in the environment software is built I believe it's time to
+explore new ideas for building software.  Some of these ideas are:
+
+\begin{enumerate}
+\item Why spend so much time and effort detecting file level changes when modern
+languages just run what you hand them and unit test suites are all or nothing?
+\item Why can't a tool let me analyze its structure to look for targets, find
+commands, view extensions, and be self-documenting?
+\item How can a tool help sites that accept project builds create the software
+more safely?
+\item More important, how can the tool help an end user be more safe when
+downloading and source-building software?
+\item Do build tools seriously need to be huge and confusing with half-assed
+attempts at Prolog?  Can they just be small and easily understood?
+\item Does a build tool really need every target in a massive logic tree structure?
+Can't I just tell it to do stuff out of order sometimes?
+\item Can a tool balance the need to extend it with new features and the need
+for people using the resulting build to feel comfortable that some junior idiot
+didn't hide evil or go crazy with his "mad skillz"?
+\item What's the minimum syntax needed to describe a build specification?
+\end{enumerate}
+
+These questions are obviously loaded, but they're the ones that I asked while
+writing Vellum.  It will give you an idea of what I was trying to get done with
+the tool.
+
+
+
+
+\section{Vellum And Python Philosophy}
+
+Vellum is written in Python and was one of the projects I started to learn
+idiomatic Python usage and philosophy.  Python is great in that they have their
+philosophy of mind easily accessible:
+
+\begin{verse}
+import this
+
+The Zen of Python, by Tim Peters
+
+Beautiful is better than ugly.\\
+Explicit is better than implicit.\\
+Simple is better than complex.\\
+Complex is better than complicated.\\
+Flat is better than nested.\\
+Sparse is better than dense.\\
+Readability counts.\\
+Special cases aren't special enough to break the rules.\\
+Although practicality beats purity.\\
+Errors should never pass silently.\\
+Unless explicitly silenced.\\
+In the face of ambiguity, refuse the temptation to guess.\\
+There should be one--and preferably only one--obvious way to do it.\\
+Although that way may not be obvious at first unless you're Dutch.\\
+Now is better than never.\\
+Although never is often better than *right* now.\\
+If the implementation is hard to explain, it's a bad idea.\\
+If the implementation is easy to explain, it may be a good idea.\\
+Namespaces are one honking great idea--let's do more of those!
+\end{verse}
+
+
+
+\section{Features At A Glance}
+
+This is handy because I can give Vellum a similar list that matches up with the
+ones Python people \emph{claim} to follow:\footnote{While I admire the fact that
+    Pythonistas have this creed, and for the most part it helps keep them all on
+        the same frequency, there's all sorts of places they arbitrarily violate
+        this list of ideas.}
+
+\begin{description}
+\item [Beautiful is better than ugly.]  The build specification format is a very
+simple and easy to type syntax that is consistent but it is \emph{not} a full
+programming language.  Don't worry you can easily escape into Python when you
+need by writing new command modules of your own or new recipes.
+\item [Explicit is better than implicit.]  Everything about Vellum is as
+explicit as possible without being obnoxious.  This means that instead of the
+weird "file-centric" mode found in other build tools where files are targets,
+Vellum makes you explicitly specify the files involved.  Targets are instead
+actually named things people use to make Vellum do stuff.
+\item [Simple is better than complex.]  Vellum is less than 1000 lines of code
+with all the docstring comments, and about half that if you remove those.
+That's including the parser, command modules, process execution, and all command
+line options.
+\item [Complex is better than complicated.]  I have no idea what the hell they
+mean here.  That's the dumbest thing I've ever heard.
+\item [Flat is better than nested.]  Vellum encourages a flatter structure
+within the confines of a simple namespace system, and then it collapses the
+names you use into a set of small dicts structures so you can easily find
+things.
+\item [Sparse is better than dense.]  Velum has special syntax for running
+commands and most build specifications are fairly small with very little symbols
+in them.
+\item [Readability counts.]  I designed Vellum's format for readability such
+that you can scan down a file and quickly spot what's going on.  I also took the
+dependency chains and moved them to their own section so that there's only one
+place you look in each file to see how targets are structured.  This also makes
+build files more modular since targets are not dependent on the build structure
+to operate.
+\item [Special cases aren't special enough to break the rules.]  Vellum tries to
+unify everything into lists, dicts, strings, and commands which are consistent
+Python functions in a consistent location.
+\item [Although practicality beats purity.]  But, it still is Python so you can
+just do whatever the hell you want in your commands, and probably even use other
+build libraries if you want.
+\item [Errors should never pass silently.] Vellum has very good error and
+debugging features only ignoring errors if you tell it to (while still printing
+them out).
+\item [Unless explicitly silenced.]  Yes, you can also tell Vellum to shut-up
+with the \verb|--quiet| option.
+\item [In the face of ambiguity, refuse the temptation to guess.]  Vellum's
+internal processing algorithm is so simple that it can't be smart enough to
+guess what you want.
+\item [There should be one--and preferably only one--obvious way to do it.]  I
+rarely find the \emph{obvious} ways to do thing in Python all that obvious, but
+Python does have very good documentation which helps you figure out what "obvious"
+means.  Most of the time however, Vellum's structure is very simple once you
+learn a few rules, and everything else can be inferred from that.
+\item [Although that way may not be obvious at first unless you're Dutch.]   I'm
+not Dutch so I wrote this manual for everyone to learn about Vellum.
+\item [Now is better than never.]  Uh, Vellum builds stuff now rather than
+never.
+\item [Although never is often better than *right* now.]  I kind of like my
+build tools to build things *right* now so Vellum does that.
+\item [If the implementation is hard to explain, it's a bad idea.]   This book
+has a whole appendix that leads you through the code so you can learn it, but
+the core processing is easily understood in a few paragraphs of text.
+\item [If the implementation is easy to explain, it may be a good idea.]   Well
+it was easy to explain so I'm guessing it is a good idea.
+\item [Namespaces are one honking great idea...]  Finally, Vellum has the
+concept of imports where it brings in commands called "modules" and other 
+build specifications called "recipes".  When it does this is puts them in 
+a namespace so that you can reuse them in other builds without having to
+modify much.
+\end{description}
+
+Following the Python philosophy while building Vellum was a good learning
+experience.  It taught me about Pythonic software design, but also about how the
+Python community reacts to ideas they think don't follow the philosophy given
+above.
+
+
+
+\section{Vellum's Not Make}
+
+Make has one huge advantage over Vellum:  \emph{history}.  There's so much
+institutional knowledge about building software using various linkers and
+compiles that Vellum would never be able to compete.  Add in autoconf and you've
+got probably 20 years of black art hidden deep in a mess of M4 macros that I
+don't even want to go near.
+
+While it wouldn't be difficult to add configuration commands and commands to
+automate building most C or C++ projects, I'd say just go use make.  Use the
+simplest make you can to get the thing built, then use Vellum to automate all
+the other drudgery and crap you have to deal with after that.
+
+
+
+\chapter{Starting}
+\label{chapter:Starting}
+
+Every programmer needs a place to start that's real and visceral.  If you
+actually waded through all the talk so far then either I'm a very good writer or
+you're very obedient.  I prefer to jump to the chapter that shows me the money.
+
+This is the chapter that shows you the money.  It will get you up and running
+with the minimal amount of theory and get your first build going in no time.
+You'll have to learn a tiny bit of how Vellum structures its world, but after
+that you are good to go.
+
+I suggest that you try to make a build using this chapter first, and try playing
+with the results and breaking things.  After you have everything working and are
+comfortable using it then move on to the more advanced later chapters.
+
+
+
+\section{Installing Vellum}
+
+Thanks to \emph{Easy Install} you can install Vellum with one command:
+
+\begin{code}{easy install vellum}{Using Easy Install}
+\begin{Verbatim}[commandchars=@\[\]]
+zedshaw@PYZat[]monstrosity@PYZlb[]~@PYZrb[]|119> sudo easy_install zapps pygments idiopidae vellum
+Searching for zapps
+...
+Installed /usr/lib/python2.5/site-packages/zapps-0.X-py2.5.egg
+...
+Installed /usr/lib/python2.5/site-packages/Pygments-0.X-py2.5.egg
+...
+Installed /usr/lib/python2.5/site-packages/idiopidae-0.X-py2.5.egg
+...
+Installed /usr/lib/python2.5/site-packages/vellum-0.X-py2.5.egg
+Processing dependencies for vellum
+Finished processing dependencies for vellum
+\end{Verbatim}
+
+\end{code}
+
+After that you should have it installed and it should be ready to use.  Doesn't
+get much simpler really.\footnote{At least until you need to uninstall it.}
+
+If you don't have Easy Install or you don't have access rights to install it, or
+you just plain want to do it the old fashioned way, then you can install it
+using \file{setup.py}.  Since the purpose of this chapter is to get you up and
+running with Vellum quickly I won't go into this option.  If you want to use
+this option then you probably know what you're doing already.
+
+
+
+\subsection{Minimalist Install}
+
+You don't have to install Idiopidae or Pygments if you just want to run Vellum.
+Those two programs are used by the Vellum build to make the book, so I'm having
+you install them now for later use where you'll be running the Vellum build to
+explore the design.
+
+If all you want to do is install Vellum then you just need Zapps:
+
+\begin{code}{minimal install vellum}{A Minimal Install}
+\begin{Verbatim}[commandchars=@\[\]]
+zedshaw@PYZat[]monstrosity@PYZlb[]~@PYZrb[]|119> sudo easy_install zapps vellum
+Searching for zapps
+...
+Installed /usr/lib/python2.5/site-packages/zapps-0.X-py2.5.egg
+...
+Installed /usr/lib/python2.5/site-packages/vellum-0.X-py2.5.egg
+Processing dependencies for vellum
+Finished processing dependencies for vellum
+\end{Verbatim}
+
+\end{code}
+
+In reality you could strip the installation down even further since the only
+thing Vellum needs from the Zapps project is the \file{zapps/rt.py} file.
+
+
+
+\subsection{Testing The Install}
+
+You can then test the install by simply running \file{zapps} without options,
+and \file{vellum -h} to see their help.  Hopefully if everything is installed
+right then the rest of this tutorial will go smoothly.
+
+
+
+\section{Your First Build}
+
+We're going to start off small and do a little toy build so you can get a good
+understanding of the structure of a Vellum build specification (from now on just
+referred to as a "build spec").  We'll start by having it do a hello
+world example and then expand it to automate all sorts of other tasks, print out
+commands, explore the build, and then at the end we'll do a practical example
+with a real Python project.
+
+Vellum works by default on a file named \file{build.vel} in the current
+directory.  It loads this file, processes any imports and arguments you give,
+and then it runs the targets you specify.  There's some extra things Vellum
+can do since the build spec is a simple internal data structure and not
+actual code, but this is the majority of its operation.
+
+To get started, make a directory somewhere and then put this into a file named
+\file{build.vel} in that directory:
+
+\begin{code}{build.vel}{Baby's First Build}
+\begin{Verbatim}[commandchars=@\[\]]
+options(default @PYad["]@PYad[hello]@PYad["])
+
+imports@PYZlb[]@PYZrb[] 
+
+depends()
+
+targets(
+    hello 
+        @PYaI[$] echo @PYad[']@PYad[hi]@PYad[']
+)
+\end{Verbatim}
+
+\end{code}
+
+This simple file demonstrates the Vellum build format, which does not have many
+symbols on purpose.  The entire file is treated as a dict, with each of
+\ident{options}, \ident{imports}, \ident{depends}, and \ident{targets} treated
+as keys and the things after them are data.  Right away you should be able to
+see that there are "dict like sections" and "list like sections" that contain
+strings and what looks like shell commands.
+
+Take a closer look again and then run \shell{vellum} to see it say 'hi'.
+
+\begin{code}{vellum output:1}{Vellum Default Target Output}
+\begin{Verbatim}[commandchars=@\[\]]
+zedshaw@PYZat[]timmy@PYZlb[]chapter2@PYZrb[]|2> vellum
+BUILDING: @PYZlb[]'hello'@PYZrb[]
+-->: hello
+ sh: "echo 'hi'"
+hi
+\end{Verbatim}
+
+\end{code}
+
+You can see that vellum ran \shell{sh: echo 'hi'} but how did it know to do
+this?  It's because you specified in \ident{options} that the \ident{default}
+was \ident{"hello"}.
+
+
+
+\subsection{Vellum's Execution Algorithm}
+
+As a programmer you can get by without knowing how Vellum processes your file,
+but a simple understanding will make debugging a broken build easier.   Vellum's
+main algorithm is actually pretty simple:
+
+\begin{enumerate}
+\item Load the build.vel and import any imports.
+\item Merge everything together in one master dict, maintaining namespaces.
+\item Look for a default target specified in \ident{options} or use those listed
+    on the command line.
+\item Process all \ident{depends} to build the ordered list of targets for each
+given target, producing a master list and remove and sequential duplicates.
+\item Start at the beginning of the target list, find each target in
+    \ident{targets} and run it after processing templates.
+\item Skip any targets that don't exist, exit when you're done.
+\end{enumerate}
+
+That's literally the entire algorithm, minus any loading of externally defined
+commands, looking for errors.  In fact, you can read the code that builds the
+dependency list in one function:
+
+\begin{code}{script.py:resolve depends}{How Vellum Resolves Dependencies}
+\begin{Verbatim}[commandchars=@\[\]]
+    @PYaz[def] @PYaL[resolve_depends](@PYaB[self], root):
+        @PYat["""]
+@PYat[        Recursively resolves the dependencies for the root]
+@PYat[        target given and return a list with those followed]
+@PYat[        by the root.]
+@PYat[        """]
+        building @PYbf[=] @PYZlb[]@PYZrb[]
+        @PYaz[if] root @PYao[in] @PYaB[self]@PYbf[.]depends:
+            @PYaz[for] dep @PYao[in] @PYaB[self]@PYbf[.]depends@PYZlb[]root@PYZrb[]:
+                @PYaz[if] dep @PYao[in] @PYaB[self]@PYbf[.]depends @PYao[and] @PYao[not] dep @PYao[in] building:
+                    building@PYbf[.]extend(@PYaB[self]@PYbf[.]resolve_depends(dep))
+                @PYaz[else]:
+                    building@PYbf[.]append(dep)
+        building@PYbf[.]append(root)
+        @PYaz[return] building
+\end{Verbatim}
+
+\end{code}
+
+The \ident{script.py:resolve\_depends} function is the main meat of Vellum since
+it figures out what tasks to run based on the dict you put in \ident{depends}.
+There's of course other processing to get to this point and some after, but
+understanding this one algorithm can help you debug problems.
+
+You can see the results of this algorithm if you add some dependencies to the
+sample file and then run \shell{vellum -T}:
+
+\begin{code}{build.vel:depends}{Now With Dependencies}
+\begin{Verbatim}[commandchars=@\[\]]
+options(default @PYad["]@PYad[hello]@PYad["])
+
+imports@PYZlb[]@PYZrb[] 
+
+depends(
+    hello @PYZlb[]@PYad[']@PYad[py.hello]@PYad[']@PYZrb[]
+)
+
+targets(
+    hello 
+        @PYaI[$] echo @PYad[']@PYad[hi]@PYad[']
+
+    py@PYbf[.]hello py @PYad["]@PYad[print ]@PYad[']@PYad[hello from python]@PYad[']@PYad["]
+)
+\end{Verbatim}
+
+\end{code}
+
+We added a dependency that \ident{'hello'} needs \ident{'py.hello'} and then
+there's a new \ident{py.hello} that prints out a hello message by running 
+the python code \python{print 'hello from python'}.  This demonstrates a few
+more features where you can run python code as a command.
+
+Now, run \shell{vellum -T} to see how this creates a dependency chain and
+modifies your results:
+
+\begin{code}{vellum -T after depencencies}{Seeing What Needs What}
+\begin{Verbatim}[commandchars=@\[\]]
+zedshaw@PYZat[]timmy@PYZlb[]chapter2@PYZrb[]|3> vellum -T
+OPTIONS:
+{...}
+
+TARGETS:
+hello:	@PYZlb[]'py.hello', 'hello'@PYZrb[]
+py.hello:	@PYZlb[]'py.hello'@PYZrb[]
+
+DEFAULT: hello
+\end{Verbatim}
+
+\end{code}
+
+Great, now ignoring the OPTIONS for a minute, you see that \ident{hello} depends
+on what you expect, and that \ident{py.hello} is just running itself.  Remember
+that vellum ignores targets that don't exist, considering this not a failure.
+Instead, it's more robust to skip them and then let you see that it didn't run
+them.\footnote{There will be an option to change this behavior later.}  This
+means that in the dependency list a target \emph{MUST} have itself listed
+otherwise it's not working right, and it should be last.
+
+Let's run \shell{vellum} again and see what we get:
+
+\begin{code}{vellum after dependencies}{Watching Dependencies Work}
+\begin{Verbatim}[commandchars=@\[\]]
+zedshaw@PYZat[]timmy@PYZlb[]chapter2@PYZrb[]|4> vellum
+BUILDING: @PYZlb[]'py.hello', 'hello'@PYZrb[]
+-->: py.hello
+ py: "print 'hello from python'"
+hello from python
+-->: hello
+ sh: "echo 'hi'"
+hi
+\end{Verbatim}
+
+\end{code}
+
+Now Vellum tells you it's going to run \ident{py.hello} and \ident{hello} in
+that order, it runs each and prints the results.
+
+Before covering how the \ident{imports} and \ident{options} work in-depth we'll
+have to cover the crash course for the specification format.  Right now though
+you should be able to build simple commands without much more knowledge of
+Vellum other than how to make python or shell commands and dependencies.
+
+The only thing you're missing is how to specify a target that runs multiple
+commands in order, which is kind of important when you need to run multiple
+commands.  I know, it sounds crazy, but sometimes, you just want to run a series
+of commands.
+
+In vellum this is easy, just do a list with a series of \ident{line strings} for
+each command:
+
+\begin{code}{build.vel:targets}{Multi-Line Targets \& Fancy Python}
+\begin{Verbatim}[commandchars=@\[\]]
+options(default @PYad["]@PYad[hello]@PYad["])
+
+imports@PYZlb[]@PYZrb[] 
+
+depends(
+    hello @PYZlb[]@PYad[']@PYad[py.hello]@PYad[']@PYZrb[]
+)
+
+targets(
+    hello @PYZlb[]
+        @PYaI[$] echo @PYad[']@PYad[hi]@PYad[']
+        @PYaI[$] echo @PYad[']@PYad[hello again]@PYad[']
+        @PYaI[$] date
+    @PYZrb[]
+
+    py@PYbf[.]hello @PYZlb[]
+        py @PYZlb[] 
+            @PYbf[|]@PYaz[print] @PYad[']@PYad[hello from python]@PYad[']
+            @PYbf[|]@PYaz[print] @PYaY[globals]()
+        @PYZrb[]
+        @PYaI[$] echo @PYad["]@PYad[i]@PYad[']@PYad[m a shell command]@PYad["]
+    @PYZrb[]
+)
+\end{Verbatim}
+
+\end{code}
+
+Vellum assumes that a target with a list means to run each element of the list
+in order, and it assumes that anything that's a \ident{string} or \ident{line
+string}\footnote{Really, strings and line strings are the same internally.}
+is just a shell command.  Notice in target \ident{py.hello} we start a
+multi-line Python statement as well and run it using the $|$ character, then
+right after that runs a shell command, so you can mix and match whatever you
+need.
+
+Run \shell{vellum} and \shell{vellum -T} to see how this all runs and works.
+Hopefully you're getting a grasp of how dependencies interact with the targets
+and how to structure a target.  If you wanted to make more dependencies, you'd
+just add another line with the name of the target and then a list of strings
+indicating what it depends on.
+
+
+
+\subsection{Available Commands}
+
+Vellum is a self-documenting system which means it can introspect on the
+commands it knows about, the build file, and all included modules and recipes.
+I want you to use Vellum to jump onto a new build on a new
+project, and with a few simple commands find all the dead bodies and understand
+the project structure.  Without such introspection Vellum isn't much better than
+the existing make tools that can't even tell you the available targets.
+
+To list the all of the available commands you run \shell{vellum -C} which prints
+out a lot, so if you just want to know what one command does, give that command:
+
+\begin{code}{vellum -C forall}{Help on 'forall'}
+\begin{Verbatim}[commandchars=@\[\]]
+zedshaw@PYZat[]timmy@PYZlb[]chapter2@PYZrb[]|1> vellum -C forall
+forall:
+    Iterates the commands in a do block over all the files
+    matching a given regex recursively.  You can put anything
+    you'd put in a normal target in the do block to be executed,
+    and when it is executed the 'var' variable is set to the
+    full path of each file.  This will also be in each task
+    you transition to with the 'needs' command.
+
+    forall assumes that you want the variable to be 'file'
+    so for most tasks you can leave that option out.  If you
+    nest forall expressions then you'll need to give each one
+    a different name (just like in a real language).
+
+    Usage: forall(files "*.py" var "file" do @PYZlb[] ... @PYZrb[])
+\end{Verbatim}
+
+\end{code}
+
+
+
+\subsection{Build Specification In-Depth}
+
+For a very complete description of Vellum's exact grammar refer to Section
+\ref{appendixA:parser} which breaks the entire Vellum \file{build.vel} file
+format down step-by-step so you can understand everything.  
+
+Right now though you just need to know enough to structure some simple builds
+and expand out.  The rule with Vellum's build format is, "If you can do Python
+you can do Vellum."  The syntax may seem different, but it actually started out
+as Python's data structure format and then I removed everything and made
+function calls consistent with dict syntax.  Otherwise everything is the same as
+it is for you in Python land:  dicts, lists, strings, and numbers in a file that
+works like a module.
+
+For vellum, a "module" is a "recipe" and is either the root build.vel file or
+any .vel you import.  These .vel files act as dicts (not lists as in Python) and
+are composed of the following "stanzas" or "sections":
+
+\begin{description}
+\item[options] You set options that control the build and have data here.  It's
+just a dict of other things.
+\item[imports] A list of import statements that include other recipes or python
+modules with commands.
+\item[depends] A simple dict that describes what targets depend on what targets.
+These are placed here rather than on the targets so that each target can also be
+used independently and so you can see the structure of a build in one place.
+\item[targets] The actual things you can tell this build spec to do as a dict of
+strings, lists, or line strings.
+\end{description}
+
+There's a lot of concepts there, but the gist of the whole format is that you
+have a syntax for making lists, dicts, strings, and something called a
+\ident{Reference}.  The whole \file{build.vel} is just a big dict, so the order of the
+above elements doesn't matter.  Put them wherever it makes sense for that build.
+{\bf Just make sure all of them are there.}
+
+Everything in the Vellum format is available in Python, with the exception of
+\emph{line strings} but those are easy. 
+
+Here's all the data structures you can use:
+
+\begin{description}
+\item[reference]  Vellum uses the concept of a reference for every structure.
+    It's like saying all functions can only take one parameter, but that parameter
+    can be lists, dicts, hashes, strings, etc.  A reference is started by just a
+    \ident{name} like you'd start a function in python with \ident{def myfunc}.
+    \emph{Example:} mything(test 'those' and 'that')
+
+\item[dicts] Almost like Python's dicts, but you use the () (parenthesis)
+            characters to start one.  This is done so that references 
+            can be like function calls and accept named
+            parameters.  The trick is that when you put references inside
+            a dict they become key=value pairs.
+            \emph{Example:} (ref1 "value" key1 "value") 
+
+\item[lists] Just like in Python, you use [] you don't need commas (,).\\
+            \emph{Example:} ['hi' 'there' 'joe' ['nested' 'this']].
+
+\item[strings] You have the usual string literals with "this" and 'that', but
+    successive strings are treated as different strings not ones that are
+    concatenated.
+    \emph{Example:} "this be zed's computer" 'this is "not" his computer'
+
+\item[numbers] You have the usual numbers, but they're loosely defined so if it
+        looks like a number and Python can convert it then it will become a number.
+        \emph{Example:} 123 0.345
+
+\item[line strings]  A feature of Vellum is that the default command for a
+    string is the \ident{sh} command, which runs shell commands.  To make
+    writing these shell commands easier and look more like, well, shell
+    statements Vellum supports \ident{line strings}.  They work like Python's
+    comments in that when a '\$','$|$', or '$>$' character is encountered,
+    everything from that point to the end of the line is considered a string.
+    You typically use '\$' and '$>$' in shell commands since that's what many
+    shell prompts look like, and you use '$|$' in longer \ident{py} command
+    strings so that you can see where the indent starts.
+    \emph{Example:} \$ I go to the end as a string.
+
+\end{description}
+
+We then need to link all of these data elements together into structures you can
+understand.  Honestly the best way for you to understand this is to write a
+simple \file{build.vel} file, slowly enhance it, and as you do run the
+\shell{vellum -D} command to see how the structure maps to Python.
+
+\subsection{Vellum to Python Converter}
+
+With all that understood, let's use Vellum to see how this file we wrote becomes
+Python structures.  Here's the first \file{build.vel} file again:
+
+\begin{code}{build.vel:targets}{First Build Again}
+\begin{Verbatim}[commandchars=@\[\]]
+options(default @PYad["]@PYad[hello]@PYad["])
+
+imports@PYZlb[]@PYZrb[] 
+
+depends(
+    hello @PYZlb[]@PYad[']@PYad[py.hello]@PYad[']@PYZrb[]
+)
+
+targets(
+    hello @PYZlb[]
+        @PYaI[$] echo @PYad[']@PYad[hi]@PYad[']
+        @PYaI[$] echo @PYad[']@PYad[hello again]@PYad[']
+        @PYaI[$] date
+    @PYZrb[]
+
+    py@PYbf[.]hello @PYZlb[]
+        py @PYZlb[] 
+            @PYbf[|]@PYaz[print] @PYad[']@PYad[hello from python]@PYad[']
+            @PYbf[|]@PYaz[print] @PYaY[globals]()
+        @PYZrb[]
+        @PYaI[$] echo @PYad["]@PYad[i]@PYad[']@PYad[m a shell command]@PYad["]
+    @PYZrb[]
+)
+\end{Verbatim}
+
+\end{code}
+
+Now, if you run \shell{vellum -D} you'll get a Python dump of the internal
+structure of the \file{build.vel} so you can compare the two:
+\footnote{You're kind of seeing under Vellum's Kimono with this command, since you can see
+all the loaded "commands" that it has found, but the \shell{-D} option is
+designed to help you understand the structure of the file and to debug a build.
+Think of it as a Vellum to Python translator so your brain can get over to the
+dark side.}
+
+\begin{code}{vellum -D}{First Build As Python}
+\begin{Verbatim}[commandchars=@\[\]]
+{@PYad[']@PYad[commands]@PYad[']: {@PYbf[.]@PYbf[.]@PYbf[.]},
+ @PYad[']@PYad[depends]@PYad[']: {@PYad[']@PYad[hello]@PYad[']: @PYZlb[]@PYad[']@PYad[py.hello]@PYad[']@PYZrb[]},
+ @PYad[']@PYad[imports]@PYad[']: @PYZlb[]@PYZrb[],
+ @PYad[']@PYad[options]@PYad[']: {@PYad[']@PYad[default]@PYad[']: @PYad[']@PYad[hello]@PYad[']},
+ @PYad[']@PYad[targets]@PYad[']: {
+     @PYad[']@PYad[hello]@PYad[']: @PYZlb[]
+         @PYad["]@PYad[ echo ]@PYad[']@PYad[hi]@PYad[']@PYap[\n]@PYad["],
+         @PYad["]@PYad[ echo ]@PYad[']@PYad[hello again]@PYad[']@PYap[\n]@PYad["], @PYad[']@PYad[ date]@PYap[\n]@PYad[']
+     @PYZrb[],
+     @PYad[']@PYad[py.hello]@PYad[']: @PYZlb[]
+         Reference(@PYad[']@PYad[py]@PYad['],@PYZlb[]
+             @PYad["]@PYad[print ]@PYad[']@PYad[hello from python]@PYad[']@PYap[\n]@PYad["], 
+             @PYad[']@PYad[print globals()]@PYap[\n]@PYad[']
+         @PYZrb[]),
+         @PYad[']@PYad[ echo ]@PYad["]@PYad[i]@PYap[\']@PYad[m a shell command]@PYad["]@PYap[\n]@PYad[']
+     @PYZrb[]
+ }
+}
+\end{Verbatim}
+
+\end{code}
+
+Ignore the "commands" element of the dict and instead look at the elements after
+that.  Notice how it matches the what you put into the \file{build.vel} file
+almost exactly.  Using the rules you can see how each section was translated
+into a Python structure:
+
+\begin{description}
+
+\item[commands] You can ignore this for now, but what you should be seeing is
+    just a list of functions that get called like "py".
+\item[depends] Notice how your syntax of \verb|depends(hello ['py.hello'])| was
+    converted to Python of \verb|'depends': {'hello': ['py.hello']}|.  As mentioned
+    a dict in Vellum starts with ( then you create key=value pairs with targets, and
+    then end the dict with ).
+\item[imports] This is an empty list, but we'll cover more advanced importing
+    later.
+\item[options] Just like with \ident{depends} we simply set a dict with all the
+    option strings we wanted, in this case we tell Vellum the default target should
+    be 'hello'.
+\item[targets] This is where the real action happens.  We can see there's two
+    keys, 'hello' and 'py.hello'.  The 'hello' target just seems to be a simple
+    string, and from out description above this will be run as a shell command of
+    \shell{echo 'hi'"}.  The 'py.hello' target is even weirder though, because it's
+    this \ident{Reference} class.  We'll cover that next, but that's how Vellum
+    knows to run the command \ident{py} with the given string of Python to run.
+
+\end{description}
+
+\ident{Reference} is a class defined in \file{vellum/parser.py} that does
+the job of holding a \ident{NAME expression} pair for later analysis.  Inside a
+dict the \ident{reference} grammar production actually is reused to do key=value
+pairing.  On its own the \ident{Reference} becomes a piece of structure used much
+like a function call.
+
+In the above, you can see where you used the \ident{py} command and passed it
+the Python to run.  You should also be able to see how that gets translated into
+Python code strings inside the \ident{Reference} object that is printed out.
+Your use of $|$ characters translated into a list of strings with the exact text
+you wrote, no escapes necessary, which helps when formatting what Vellum should
+be doing.
+
+
+\section{Expanding The Build}
+
+
+
+
+\section{Dealing With Distribution}
+
+
+
+
+\section{Generating Documentation}
+
+
+
+
+\section{Limitations}
+
+
+
+
+\subsection{GNU GPL v3}
+
+
+
+\chapter{Running}
+\label{chapter:Running}
+
+
+
+\section{Invoking Vellum}
+
+
+\section{Commandline Options}
+
+
+\section{Changing Execution}
+
+
+\section{Getting Information}
+
+
+\section{The Shell}
+
+
+\section{Finding Things}
+
+
+
+\chapter{Building}
+\label{chapter:Building}
+
+
+
+\section{Specifications In Depth}
+
+
+\subsection{Symbols}
+
+
+\subsection{Grammar}
+
+
+\subsection{Syntax}
+
+
+\subsection{Structure}
+
+
+\subsection{Examples}
+
+
+\subsection{Warnings}
+
+
+
+\section{Processing Model}
+
+
+\subsection{Other Build Tools}
+
+
+\subsection{Vellum's Model}
+
+
+\subsection{The Python Influence}
+
+
+
+\section{Commands}
+
+
+\subsection{Builtin Commands}
+
+
+\subsection{Writing Your Own}
+
+
+\subsection{Shell Commands}
+
+
+
+\section{Recipes}
+
+
+\subsection{Local Recipes}
+
+
+\subsection{Global Recipes}
+
+
+
+\section{Templates}
+
+
+
+\section{Putting It All Together}
+
+
+\subsection{Structing The Spec}
+
+
+\subsection{Setting Options}
+
+
+\subsection{Organizing Depends}
+
+
+\subsection{Testing Order}
+
+
+\subsection{Filling In Targets}
+
+
+\subsection{Importing Modules}
+
+
+\subsection{Importing Recipes}
+
+
+\subsection{Analzying The Results}
+
+
+\subsection{Using And Tuning}
+
+
+
+\chapter{Debugging}
+\label{chapter:Debugging}
+
+
+
+\section{When Things Go Wrong}
+
+
+\section{Listing Commands}
+
+
+\section{Dumping Structure}
+
+
+\section{Searching For Things}
+
+
+\section{Vellum In The Safe Box}
+
+
+\section{Other Tricks}
+
+
+
+\chapter{Extending}
+\label{chapter:Extending}
+
+
+
+\section{Writing Recipes}
+
+
+\subsection{Recipe Safety}
+
+
+\section{Writing Modules}
+
+
+\subsection{Module Safety}
+
+
+\section{Distribution Techniques}
+
+
+\section{Finding Other's Toys}
+
+
+
+\chapter{Embedding}
+\label{chapter:Embedding}
+
+
+
+\section{Parser}
+
+
+\section{Press}
+
+
+\section{Script}
+
+
+\section{Scribe}
+
+
+\section{Commands}
+
+
+\section{Sample Rules Engine Application}
+
+
+\section{Licensing}
+
+
+
+\chapter{Contributing}
+\label{chapter:Contributing}
+
+
+
+\section{Coding Standards}
+
+
+\section{Using Bazaar}
+
+
+\section{Using Launchpad}
+
+
+\section{Sample Session With Zed}
+
+\appendix
+
+
+\chapter{The Code}
+\label{appendix:Code}
+
+\versal{V}ellum is simple enough for you to enjoy reading the code in an hour.
+To help you with this task I have organized the code into digestible chunks for
+you to read through casually while sitting near a fire.  You can learn
+everything about Vellum in less than a few hours and \emph{never} be mystified
+about its operation again.
+
+The overall structure of Vellum follows a chain of interacting objects that do a
+particular job and are similar to a compiler, but with much funnier obscure
+names to keep things interesting.
+
+\begin{description}
+\item[$\rightarrow$\ovalbox{bin.py}] \file{bin.py} is a module that encapsulates all the
+    logic for the command line options and is where the world starts going
+    through ...
+\item[$\hookrightarrow$\ovalbox{Parser}] to read the \file{build.vel}
+    file to create the initial data structure composed of \ident{lists},
+     \ident{dicts}, \ident{strings}, and \ident{Reference} objects which ..
+\item[$\hookrightarrow$\ovalbox{Press}] cleans up and performs all
+    imports for ...
+\item[$\hookrightarrow$\ovalbox{Script}] to pull structure out, resolve
+    dependencies, and perform semantic checking for ...
+\item[$\hookrightarrow$\ovalbox{Scribe}] to run the resulting final
+    \ident{Script} according to dependencies and \ident{options} settings
+    as well as running any ...
+\item[$\leftarrow$\ovalbox{commands}] functions which take either a raw 
+    expression or keyword arguments depending
+    on how it is used in the \file{build.vel} files.
+\end{description}
+
+
+
+\section{bin.py}
+
+I hate this file, but it's what you need to write in order to process command
+line options from the user in Python.  I'll just quickly go through the
+highlights and then leave it to you to read the real code.
+
+
+\begin{code}{bin.py:options table}{Command Line Options Table}
+\begin{Verbatim}[commandchars=@\[\]]
+@PYaE[### These options are wired up by parse_sys_argv.]
+options @PYbf[=] @PYZlb[]
+ (@PYad["]@PYad[-f]@PYad["], @PYad["]@PYad[--file]@PYad["], @PYad["]@PYad[filename]@PYad["], 
+  @PYad["]@PYad[Build file to read the build recipe from (no .vel)]@PYad["], @PYad["]@PYad[store]@PYad["], @PYad["]@PYad[build]@PYad["]),
+ (@PYad["]@PYad[-q]@PYad["], @PYad["]@PYad[--quiet]@PYad["],  @PYad["]@PYad[verbose]@PYad["],  
+  @PYad["]@PYad[Tell Vellum to shut up.]@PYad["],  @PYad["]@PYad[store_false]@PYad["],  @PYaB[True]),
+ (@PYad["]@PYad[-d]@PYad["], @PYad["]@PYad[--dry-run]@PYad["],  @PYad["]@PYad[dry_run]@PYad["],  
+  @PYad["]@PYad[Dry run, printing what would happen]@PYad["],  @PYad["]@PYad[store_true]@PYad["],  @PYaB[False]),
+ (@PYad["]@PYad[-k]@PYad["], @PYad["]@PYad[--keep-going]@PYad["],  @PYad["]@PYad[keep_going]@PYad["],  
+  @PYad["]@PYad[Don]@PYad[']@PYad[t stop, build no matter what]@PYad["],  @PYad["]@PYad[store_true]@PYad["],  @PYaB[False]),
+ (@PYad["]@PYad[-T]@PYad["], @PYad["]@PYad[--targets]@PYad["],  @PYad["]@PYad[show_targets]@PYad["],  
+  @PYad["]@PYad[Display the search of targets and what they depend on]@PYad["],  @PYad["]@PYad[store_true]@PYad["],  @PYaB[False]),
+ (@PYad["]@PYad[-F]@PYad["], @PYad["]@PYad[--force]@PYad["],  @PYad["]@PYad[force]@PYad["],  
+  @PYad["]@PYad[Force all given conditions true so everything runs]@PYad["],  @PYad["]@PYad[store_true]@PYad["],  @PYaB[False]),
+ (@PYad["]@PYad[-D]@PYad["], @PYad["]@PYad[--dump]@PYad["],  @PYad["]@PYad[dump]@PYad["],  
+  @PYad["]@PYad[Dump the build out to a fully coagulated build.]@PYad["],  @PYad["]@PYad[store_true]@PYad["],  @PYaB[False]),
+ (@PYad["]@PYad[-s]@PYad["], @PYad["]@PYad[--shell]@PYad["],  @PYad["]@PYad[shell]@PYad["],  
+  @PYad["]@PYad[Run the vellum shell prompt.]@PYad["],  @PYad["]@PYad[store_true]@PYad["],  @PYaB[False]),
+ (@PYad["]@PYad[-I]@PYad["], @PYad["]@PYad[--install]@PYad["],  @PYad["]@PYad[install]@PYad["],  
+  @PYad["]@PYad[Create the ~/.vellum directories.]@PYad["],  @PYad["]@PYad[store_true]@PYad["],  @PYaB[False]),
+ (@PYad["]@PYad[-v]@PYad["], @PYad["]@PYad[--version]@PYad["],  @PYad["]@PYad[show_version]@PYad["],  
+  @PYad["]@PYad[Print the version/build number.]@PYad["],  @PYad["]@PYad[store_true]@PYad["],  @PYaB[False]),
+ (@PYad["]@PYad[-C]@PYad["], @PYad["]@PYad[--commands]@PYad["], @PYad["]@PYad[list_commands]@PYad["], 
+  @PYad["]@PYad[List all commands and their help, or one.]@PYad["], @PYad["]@PYad[store_true]@PYad["], @PYaB[False]),
+ (@PYad["]@PYad[-S]@PYad["], @PYad["]@PYad[--search]@PYad["], @PYad["]@PYad[search_commands]@PYad["], 
+  @PYad["]@PYad[Search commands with a regex.]@PYad["], @PYad["]@PYad[store_true]@PYad["], @PYaB[False]),
+ (@PYad["]@PYad[-w]@PYad["], @PYad["]@PYad[--watch]@PYad["], @PYad["]@PYad[watch_file]@PYad["], 
+  @PYad["]@PYad[Watch a file and run the targets whenever it changes.]@PYad["], @PYad["]@PYad[store]@PYad["], @PYaB[None]),
+@PYZrb[]
+\end{Verbatim}
+
+\end{code}
+
+The options table is a succinct way to encode all the options that Vellum has
+without resorting to tons of repetitive code.  Vellum always uses the same
+option setup with a pairing of short (-w) and long (\verb|--watch|) formats and these
+are always available in the final \ident{options} dict that builds can access.
+
+This table is processed by \file{bin.py:parse\_sys\_argv} using the
+\ident{OptionParser} class available in Python.
+
+\begin{code}{bin.py:parsing the options table}{Less Code For Options Parsing}
+\begin{Verbatim}[commandchars=@\[\]]
+@PYaz[def] @PYaL[parse_sys_argv](argv):
+    @PYat["""]
+@PYat[    Expects the sys.argv@PYZlb[]1:@PYZrb[] to parse and then returns]
+@PYat[    an options hash combined with the args.]
+@PYat[    """]
+    parser @PYbf[=] OptionParser()
+    @PYaz[for] opt, @PYaY[long], dest, help, action, default @PYao[in] options:
+        parser@PYbf[.]add_option(opt, @PYaY[long], 
+                dest@PYbf[=]dest, help@PYbf[=]help, 
+                action@PYbf[=]action, default@PYbf[=]default)
+    cmd_opts, args @PYbf[=] parser@PYbf[.]parse_args(argv)
+    @PYaz[return] cmd_opts@PYbf[.]__dict__, args
+\end{Verbatim}
+
+\end{code}
+
+These options are used by the primary \file{bin.py:run} function to determine
+which of the other methods to run.
+
+\begin{code}{bin.py:the start of the world}{Read This First}
+\begin{Verbatim}[commandchars=@\[\]]
+@PYaz[def] @PYaL[run](argv@PYbf[=]sys@PYbf[.]argv):
+    @PYat["""]
+@PYat[    Main entry for the entire program, it parses the command]
+@PYat[    line arguments and then runs the other methods in this]
+@PYat[    file to make Vellum actually work.]
+@PYat[    """]
+    options, args @PYbf[=] parse_sys_argv(argv)
+
+    @PYaz[try]:
+        script @PYbf[=] Script(options@PYZlb[]@PYad["]@PYad[filename]@PYad["]@PYZrb[], options)
+        opts @PYbf[=] script@PYbf[.]options
+        @PYaz[if] opts@PYZlb[]@PYad["]@PYad[show_targets]@PYad["]@PYZrb[]: show_targets(options, script)
+        @PYaz[elif] opts@PYZlb[]@PYad["]@PYad[dump]@PYad["]@PYZrb[]: dump(options)
+        @PYaz[elif] opts@PYZlb[]@PYad["]@PYad[install]@PYad["]@PYZrb[]: install(options, script)
+        @PYaz[elif] opts@PYZlb[]@PYad["]@PYad[shell]@PYad["]@PYZrb[]: shell(options, script)
+        @PYaz[elif] opts@PYZlb[]@PYad["]@PYad[show_version]@PYad["]@PYZrb[]: @PYaz[print] VERSION
+        @PYaz[elif] opts@PYZlb[]@PYad["]@PYad[list_commands]@PYad["]@PYZrb[]: commands(options, script, args)
+        @PYaz[elif] opts@PYZlb[]@PYad["]@PYad[search_commands]@PYad["]@PYZrb[]: search(options, script, args)
+        @PYaz[elif] opts@PYZlb[]@PYad["]@PYad[watch_file]@PYad["]@PYZrb[]: watch(options, script, args)
+        @PYaz[else]: build(options, script, args)
+    @PYaz[except] vellum@PYbf[.]DieError, err:
+        @PYaz[print] @PYad["]@PYad[ERROR: ]@PYbg[%s]@PYad["] @PYbf[%] err
+        @PYaz[print] @PYad["]@PYad[Exiting (use -k to keep going)]@PYad["]
+        sys@PYbf[.]exit(@PYax[1])
+    @PYaz[except] vellum@PYbf[.]ImportError, err:
+        @PYaz[print] @PYad["]@PYbg[%s]@PYap[\n]@PYad[Fix your script.]@PYad["] @PYbf[%] err
+\end{Verbatim}
+
+\end{code}
+
+The rest of the file is simply one method for each command line option and any
+supporting methods they need.  Most of the methods are small, but if you want to
+add new options, this is where you go.
+
+In the \ident{run} function you can immediately see that a \ident{Script} object
+is loaded, and if you look at the other functions you'll see they either use
+this \ident{Script} object to perform analysis or they load a \ident{Scribe}
+object to do some actual processing.
+
+The most complex example of using \ident{Script} to analyze the build is
+\ident{search}:
+
+\begin{code}{bin.py:implementation of -S}{How Searching Works}
+\begin{Verbatim}[commandchars=@\[\]]
+@PYaz[def] @PYaL[search](options, script, regex):
+    @PYat["""]
+@PYat[    Searches through all available targets for anything that matches the]
+@PYat[    given regex(es) in their name or their commands.]
+@PYat[    """]
+    search @PYbf[=] re@PYbf[.]compile(@PYad["]@PYad[^.*(]@PYad["] @PYbf[+] @PYad["]@PYad[ ]@PYad["]@PYbf[.]join(regex) @PYbf[+] @PYad["]@PYad[).*$]@PYad["])
+
+    commands @PYbf[=] @PYZlb[]cmd @PYaz[for] cmd @PYao[in] script@PYbf[.]commands
+                @PYaz[if] search@PYbf[.]match(@PYaY[repr](cmd))@PYZrb[]
+    imports @PYbf[=] @PYZlb[]@PYad["]@PYad[- ]@PYbg[%s]@PYad["] @PYbf[%] imp @PYaz[for] imp @PYao[in] script@PYbf[.]imports
+                @PYaz[if] search@PYbf[.]match(@PYaY[repr](imp))@PYZrb[]
+    depends @PYbf[=] @PYZlb[]@PYad["]@PYad[- ]@PYbg[%s]@PYad[ ]@PYbg[%r]@PYad["] @PYbf[%] dep @PYaz[for] dep @PYao[in] script@PYbf[.]depends@PYbf[.]items()
+                @PYaz[if] search@PYbf[.]match(@PYaY[repr](dep))@PYZrb[]
+    targets @PYbf[=] @PYZlb[]@PYad["]@PYad[- ]@PYbg[%s]@PYap[\n]@PYap[\t]@PYbg[%s]@PYad["] @PYbf[%] (n,pformat(b))
+                @PYaz[for] n,b @PYao[in] script@PYbf[.]targets@PYbf[.]items()
+                @PYaz[if] search@PYbf[.]match(@PYaY[repr]((n,b)))@PYZrb[]
+
+    @PYaz[print] @PYad["]@PYad[SEARCH FOR: ]@PYad["], regex
+    @PYaz[if] @PYao[not] (commands @PYao[or] imports @PYao[or] depends @PYao[or] targets):
+        @PYaz[print] @PYad["]@PYap[\t]@PYad[Found nothing.]@PYad["]
+
+    @PYaz[if] commands: @PYaz[print] @PYad["]@PYad[COMMANDS:]@PYad["], commands
+    @PYaz[if] imports:  @PYaz[print] @PYad["]@PYap[\n]@PYad[IMPORTS:]@PYap[\n]@PYad["], @PYad["]@PYap[\n]@PYap[\n]@PYad["]@PYbf[.]join(imports)
+    @PYaz[if] depends:  @PYaz[print] @PYad["]@PYap[\n]@PYad[DEPENDS:]@PYap[\n]@PYad["], @PYad["]@PYap[\n]@PYap[\n]@PYad["]@PYbf[.]join(depends)
+    @PYaz[if] targets:  @PYaz[print] @PYad["]@PYap[\n]@PYad[TARGETS:]@PYap[\n]@PYad["], @PYad["]@PYap[\n]@PYap[\n]@PYad["]@PYbf[.]join(targets)
+\end{Verbatim}
+
+\end{code}
+
+However, the most important function which moves on to the next process is the
+\ident{build} method:
+
+\begin{code}{bin.py:building with Scribe}{Beginning of Build Processing}
+\begin{Verbatim}[commandchars=@\[\]]
+@PYaz[def] @PYaL[build](options, script, targets):
+    @PYat["""Builds the targets."""]
+    scribe @PYbf[=] Scribe(script)
+    scribe@PYbf[.]build(targets)
+\end{Verbatim}
+
+\end{code}
+
+I'm sure this file could be generalized more, but it's simple enough now and not
+the important part of Vellum.  A major change that could happen is to use the
+options that are set to run a given method, rather than the large if-statement.
+
+
+
+
+\section{Parser}
+\label{appendixA:parser}
+
+The \ident{Parser} lives in \file{parser.py} and is probably the place where you should
+start for understanding Vellum's internal structure.  While \file{bin.py}
+doesn't actually mention \ident{Parser} it is used as the beginning of
+processing by \ident{Press} as mentioned at the beginning of Appendix
+\ref{appendix:Code}.
+
+The \ident{Parser}
+controls how Vellum understands the user's demands, and then the \ident{Scribe}
+is how Vellum follows those demands.  Understanding those two pieces means you
+understand the core of how Vellum works.
+
+\begin{code}{parser.py:1}{Reference Class Used By Parser}
+\begin{Verbatim}[commandchars=@\[\]]
+@PYaE[# Copyright (C) 2008 Zed A. Shaw.  Licensed under the terms of the GPLv3.]
+
+@PYaz[class] @PYaO[Reference](@PYaY[object]):
+    @PYaz[def] @PYaL[__init__](@PYaB[self],name, expr):
+        @PYaB[self]@PYbf[.]name @PYbf[=] name
+        @PYaB[self]@PYbf[.]expr @PYbf[=] expr
+
+    @PYaz[def] @PYaL[__str__](@PYaB[self]):
+        @PYaz[if] @PYaB[self]@PYbf[.]expr:
+            @PYaz[return] @PYad["]@PYbg[%s]@PYad[(]@PYbg[%r]@PYad[)]@PYad["] @PYbf[%] (@PYaB[self]@PYbf[.]name, @PYaB[self]@PYbf[.]expr)
+        @PYaz[else]:
+            @PYaz[return] @PYad["]@PYbg[%s]@PYad["]
+
+    @PYaz[def] @PYaL[__repr__](@PYaB[self]):
+        @PYaz[return] @PYad["]@PYad[Reference(]@PYbg[%r]@PYad[,]@PYbg[%r]@PYad[)]@PYad["] @PYbf[%] (@PYaB[self]@PYbf[.]name, @PYaB[self]@PYbf[.]expr)
+\end{Verbatim}
+
+\end{code}
+
+This fancy bit of Python starts off the main parser for the Vellum syntax, which
+is actually nothing more than boilerplate.  Notice the inclusion of the
+Reference class which is the primary data structure for the AST apart from lists and
+dicts.  From the earlier text you know that Vellum's syntax consists of these
+Reference objects, which are always a name followed by some expression.  Now you
+can see how this is implemented...as a name with an expression.
+
+In \file{parser.g:grammar} is the actual grammar defined using Zapps (a Recursive Descent Parser
+generator I also maintain).\footnote{If you plan on fixing or augmenting the
+    grammar for Vellum then you do so in the \file{parser.g} file \emph{not} the
+        \file{parser.py} file since the latter is generated by the former.}
+
+\begin{code}{parser.g:grammar}{Grammar for Vellum's Parser}
+\begin{Verbatim}[commandchars=@\[\]]
+        
+%%
+parser Parser:
+    ignore: r"@PYZlb[]\r\n \t@PYZrb[]+"
+    token NUMBER: "@PYZlb[]0-9@PYZrb[]+@PYZlb[]0-9\.@PYZrb[]*"
+    token STRING: '\'(@PYZlb[]^\\n\'\\\\@PYZrb[]|\\\\.)*\'|"(@PYZlb[]^\\n"\\\\@PYZrb[]|\\\\.)*"'
+    token NAME: r"@PYZlb[]a-zA-Z@PYZrb[]@PYZlb[]a-zA-Z\-_0-9/\.@PYZrb[]+"
+    token LPAR: r'\('
+    token RPAR: r'\)'
+    token LSQB: r'\@PYZlb[]'
+    token RSQB: r'\@PYZrb[]'
+    token ENDMARKER: '\0'
+    token SH: r'@PYZlb[]>$|@PYZrb[]'
+    token LINE: r'@PYZlb[]^\n\r@PYZrb[]+\n'
+    token COMMENT: '#'
+
+    rule input: 
+        {{ self.data = {} }} 
+        ( 
+         reference {{ self.data@PYZlb[]reference.name@PYZrb[] = reference.expr }}
+         | COMMENT LINE
+        )* ENDMARKER 
+        {{ return self.data }}
+
+    rule expr: 
+            atom {{ return atom }}
+            | reference {{ return reference }}
+            | structure {{ return structure }}
+
+    rule reference: NAME expr 
+        {{ return Reference(NAME, expr) }}
+
+    rule atom: 
+        NUMBER {{ return atoi(NUMBER) }} 
+        | STRING {{ return eval(STRING) }}
+        | SH LINE {{ return LINE }}
+
+    rule structure: 
+        LSQB elements? RSQB {{ return elements or @PYZlb[]@PYZrb[] }} 
+        | LPAR dictmaker? RPAR {{ return dictmaker or {} }}
+
+    rule elements: {{res = @PYZlb[]@PYZrb[] }} (expr {{res.append(expr)}})+ 
+        {{ return res }}
+    rule dictmaker: {{res = {} }} (reference {{res@PYZlb[]reference.name@PYZrb[] = reference.expr}})+ 
+        {{ return res }}
+%%
+\end{Verbatim}
+
+\end{code}
+
+The important lines for understanding the structure of a Vellum build are 32-60,
+and if we remove any extraneous code elements we have the following succinct
+grammar to study:
+
+\begin{code}{parser.g:grammar}{Clean Grammar For Vellum}
+\begin{Verbatim}[commandchars=@\[\]]
+rule input: (reference | COMMENT LINE)* ENDMARKER 
+rule expr: atom | reference | structure 
+rule reference: NAME expr 
+rule atom: NUMBER  | STRING | SH LINE 
+rule structure: 
+    LSQB elements? RSQB 
+    | LPAR dictmaker? RPAR 
+rule elements: (expr)+ 
+rule dictmaker: (reference)+
+\end{Verbatim}
+
+\end{code}
+
+When you read a grammar like this, you start at the "root" production (the
+things that are like \ident{rule input: ...}) and then work your way
+through all the alternatives and subsequent productions.  This encodes
+what's a tree of the grammar similar to those annoying sentence diagrams
+you did in school.
+
+If I were to read this, I'd do it like this:
+
+\begin{description}
+\item[rule input:] "Alright, this can take any number of \ident{references} or
+    \ident{COMMENT\_LINE} elements.  Hmm, what's \ident{reference} do?"
+\item[rule reference:] "Reference seems to be a \ident{NAME} and then {\bf one} element
+    that's an \ident{expr}.  Alright, weird, but let's see what \ident{expr} is
+    first before we pass judgement."
+\item[rule expr:] "Ok, this looks like an expression type, and it can be either an
+    \ident{atom}, \ident{reference} (again), or \ident{structure}.  Ah, so
+    because \ident{reference} can take an \ident{expr} and then \ident{expr} can
+    also be another reference we can build a {\bf recursive structure} with this
+    grammar.  Now, what's \ident{atom} and \ident{structure} contain?"
+\item[rule atom:] "Sweet, that's just a terminal node, which is a fancy word for it has
+    real data and that data is a \ident{NUMBER}, \ident{STRING} or \ident{SH\_LINE}.
+    Looking up at the tokens I know what all of those are, although
+    \ident{SH\_LINE} seems to be like \ident{COMMENT\_LINE} but it produces a
+    string.  Very handy, but then what's \ident{structure}."
+\item[rule structure:] "Ok, this seems to be how you construct lists and dictionaries
+    in order to make a full data structure.  List looks normal as like in Python
+    and can take optional \ident{elements}, but why is a dictionary encoded with
+    parenthesis (\ident{LPAR} and \ident{RPAR})?  Let's look at elements first."
+\item[rule elements:] "Yep, just takes as many \ident{expr} types as possible and
+    appends them to a list before returning the list.  Pretty simple.  Since
+    \ident{expr} can take all of this the structure is recursive so we can build
+    up nearly anything we can in Python."
+\item[rule dictmaker:] "Now why the hell does a dictionary in this grammar take a
+    parenthesis rather than braces like in Python?  That's just weird.  Ok, it
+    seems to not take \ident{expr} elements but instead \ident{reference}
+    elements.  Hmm, so from the grammar for \ident{reference} I know that it's
+    formed like \ident{blah expression}.  Hmm, so a dictionary then is something 
+    like \python{(foo "test" bar "flaw" sig 123)} and then looking at the
+    code...aha!  So, a dictionary uses the \ident{reference} grammar to create
+    \python{key=value} pairs with the \ident{NAME expr} grammar.  Oh cool, so if a
+    \ident{reference} can also take a dictionary, and dictionaries use
+    parenthesis then a reference can look like a function call that takes named
+    parameters!  I can write \python{myfun(arg1 "value" arg2 "value" arg3
+    "value")} and have it mean the same as \python{myfunc(arg1="value",
+        arg2="value", arg3="value")}.  Nice and consistent."
+\end{description}
+
+I obviously don't speak in \ident{highlighting} mode, but if you walk through
+those paragraphs and study the grammar it should give you a good idea of how to
+understand it.  Once you have this in your head, try just running \python{python
+vellum/parser.py input} and typing expressions in to see how they translate to
+Python.  This little gem of a testing and exploration tool is handled by a
+function in the footer of \file{parser.g}:
+
+\begin{code}{parser.py:footer}{Testing Case for Parser}
+\begin{Verbatim}[commandchars=@\[\]]
+@PYaz[if] __name__ @PYbf[==] @PYad[']@PYad[__main__]@PYad[']:
+    @PYam[from] @PYaW[sys] @PYam[import] argv, stdin
+    @PYaz[if] @PYaY[len](argv) @PYbf[>]@PYbf[=] @PYax[2]:
+        @PYaz[if] @PYaY[len](argv) @PYbf[>]@PYbf[=] @PYax[3]:
+            f @PYbf[=] @PYaY[open](argv@PYZlb[]@PYax[2]@PYZrb[],@PYad[']@PYad[r]@PYad['])
+        @PYaz[else]:
+            f @PYbf[=] stdin
+        @PYaz[print] parse(argv@PYZlb[]@PYax[1]@PYZrb[], f@PYbf[.]read() @PYbf[+] @PYad["]@PYap[\0]@PYad["])
+    @PYaz[else]: @PYaz[print] @PYad[']@PYad[Args:  <rule> @PYZlb[]<filename>@PYZrb[]]@PYad[']
+\end{Verbatim}
+
+\end{code}
+
+
+\section{press.py}
+
+Vellum uses metaphors from the printing press business as the names for many of
+its classes and files.  In \file{press.py} you'll find the \ident{Press} class
+which knows how to use the parser to fully load a complete build specification.
+This is actually difficult because \ident{Press} has to recursively load each
+\file{*.vel} and Python module specified in the \ident{imports} section of the
+primary \file{build.vel}
+
+\begin{code}{press.py:class Press}{Press Loads All The Data}
+\begin{Verbatim}[commandchars=@\[\]]
+@PYaz[class] @PYaO[Press](@PYaY[object]):
+    @PYat["""]
+@PYat[    A Press uses a Parser to read a build spec and then combine it]
+@PYat[    with any given import statements.  This is the equiv. of the]
+@PYat[    component in a interpreter that builds an AST with the parser.]
+
+@PYat[    The next stage in the processing is for the Script to get the]
+@PYat[    Press's results to analyze the contents.]
+@PYat[    """]
+
+    @PYaz[def] @PYaL[__init__](@PYaB[self], main, defaults@PYbf[=]{}):
+        @PYat["""]
+@PYat[        Initializes the press according to the ]
+@PYat[        defaults (which come from vellum.bin.parse_sys_argv().]
+@PYat[        """]
+        @PYaB[self]@PYbf[.]options @PYbf[=] defaults
+        @PYaB[self]@PYbf[.]module_source @PYbf[=] os@PYbf[.]path@PYbf[.]expanduser(@PYad["]@PYad[~/.vellum/modules]@PYad["])
+        @PYaB[self]@PYbf[.]recipe_source @PYbf[=]  os@PYbf[.]path@PYbf[.]expanduser(@PYad["]@PYad[~/.vellum/recipes]@PYad["])
+        @PYaB[self]@PYbf[.]recipes @PYbf[=] {}
+        @PYaB[self]@PYbf[.]modules @PYbf[=] {}
+        @PYaB[self]@PYbf[.]main @PYbf[=] @PYaB[self]@PYbf[.]load_recipe(main @PYbf[+] @PYad["]@PYad[.vel]@PYad["])
+        @PYaB[self]@PYbf[.]main@PYZlb[]@PYad["]@PYad[commands]@PYad["]@PYZrb[] @PYbf[=] {}
+        @PYaE[# we always need these commands]
+        @PYaB[self]@PYbf[.]load(@PYad[']@PYad[module]@PYad['], @PYad[']@PYad[vellum.commands]@PYad['])
+        @PYaB[self]@PYbf[.]imports(@PYaB[self]@PYbf[.]main)
+\end{Verbatim}
+
+\end{code}
+
+You can see that \file{press.py:class Press} does some extra lifting to get
+things going initially.  The primary thing to review is how it loads the
+\file{vellum/command.py} Python module and then completes all the imports.
+Without this Vellum would require you to always load those common base commands.
+
+There also needs to be a process for finding files such that a user doesn't have
+to specify a full path.
+
+\begin{code}{press.py:resolve vel file}{Finds Vellum Files}
+\begin{Verbatim}[commandchars=@\[\]]
+    @PYaz[def] @PYaL[resolve_vel_file](@PYaB[self], name):
+        @PYat["""]
+@PYat[        Tries to find a file ending in .vel with]
+@PYat[        the name by first trying in the local directory]
+@PYat[        and then in the ~/.vellum/recipes directory.]
+
+@PYat[        It will also add the .vel if one isn't given already.]
+@PYat[        """]
+        @PYaz[if] @PYao[not] name@PYbf[.]endswith(@PYad["]@PYad[.vel]@PYad["]): 
+            name @PYbf[+]@PYbf[=] @PYad["]@PYad[.vel]@PYad["]
+
+        names @PYbf[=] (os@PYbf[.]path@PYbf[.]join(n, name) @PYaz[for] n @PYao[in] @PYZlb[]@PYad["]@PYad[./]@PYad["], @PYaB[self]@PYbf[.]recipe_source@PYZrb[])
+        found @PYbf[=] @PYZlb[]n @PYaz[for] n @PYao[in] names @PYaz[if] os@PYbf[.]path@PYbf[.]exists(n)@PYZrb[]
+        @PYaz[if] @PYaY[len](found) @PYbf[==] @PYax[1]:
+            @PYaz[return] found@PYZlb[]@PYax[0]@PYZrb[]
+        @PYaz[elif] @PYaY[len](found) @PYbf[>] @PYax[1]:
+            @PYaz[raise] LoadError(@PYad["]@PYad[More than one file named ]@PYbg[%s]@PYad[: ]@PYbg[%r]@PYad[.]@PYad["] @PYbf[%] (name, found))
+        @PYaz[else]:
+            @PYaz[raise] LoadError(@PYad["]@PYad[Did not find file named ]@PYbg[%s]@PYad[ at any of: ]@PYbg[%r]@PYad[.]@PYad["] @PYbf[%] (name,
+                                                                           found))
+\end{Verbatim}
+
+\end{code}
+
+I designed \ident{resolve\_vel\_file} like this so that it would give you a good
+error message when it couldn't find the requested file in all the usual places.
+
+The start of the recursive processing is done by the \ident{imports} method.
+
+\begin{code}{press.py:import}{Rolls Through Imports}
+\begin{Verbatim}[commandchars=@\[\]]
+    @PYaz[def] @PYaL[imports](@PYaB[self], import_from):
+        @PYat["""]
+@PYat[        Goes through the imports listed in import_from]
+@PYat[        and then merges them into self.main.]
+@PYat[        """]
+        @PYaz[if] @PYao[not] @PYad["]@PYad[imports]@PYad["] @PYao[in] import_from: @PYaz[return]
+
+        @PYaz[for] imp @PYao[in] import_from@PYZlb[]@PYad["]@PYad[imports]@PYad["]@PYZrb[]:
+            args @PYbf[=] imp@PYbf[.]expr
+            args@PYbf[.]setdefault(@PYad["]@PYad[as]@PYad["], @PYaB[None])
+            @PYaB[self]@PYbf[.]load(imp@PYbf[.]name, args@PYZlb[]@PYad["]@PYad[from]@PYad["]@PYZrb[], args@PYZlb[]@PYad["]@PYad[as]@PYad["]@PYZrb[])
+\end{Verbatim}
+
+\end{code}
+
+The rest of the main work is done by the \ident{load} method which recursively
+calls \ident{load\_recipe} or \ident{load\_module} depending on the type of
+import statement encountered.
+
+
+\begin{code}{press.py:load}{Loads Recipes and Modules}
+\begin{Verbatim}[commandchars=@\[\]]
+    @PYaz[def] @PYaL[load](@PYaB[self], kind, @PYaY[file], as_name@PYbf[=]@PYaB[None]):
+        @PYat["""]
+@PYat[        Given a kind of 'recipe' or 'module' this figures out]
+@PYat[        how to load the spec or python module.  It will do]
+@PYat[        this recursively until it has loaded everything, and]
+@PYat[        do it without causing loops.]
+@PYat[        """]
+        @PYaz[if] kind @PYbf[==] @PYad["]@PYad[recipe]@PYad["]:
+            @PYaY[file] @PYbf[=] @PYaB[self]@PYbf[.]resolve_vel_file(@PYaY[file])
+            @PYaz[if] @PYaY[file] @PYao[not] @PYao[in] @PYaB[self]@PYbf[.]recipes:
+                spec @PYbf[=] @PYaB[self]@PYbf[.]load_recipe(@PYaY[file])
+                @PYaB[self]@PYbf[.]join(spec, @PYaB[self]@PYbf[.]main, @PYaY[file], as_name)
+                @PYaB[self]@PYbf[.]imports(spec)
+        @PYaz[elif] kind @PYbf[==] @PYad["]@PYad[module]@PYad["]:
+            @PYaz[if] @PYaY[file] @PYao[not] @PYao[in] @PYaB[self]@PYbf[.]modules:
+                cmds @PYbf[=] @PYaB[self]@PYbf[.]load_module(@PYaY[file])
+                @PYaB[self]@PYbf[.]merge(cmds, @PYaB[self]@PYbf[.]main@PYZlb[]@PYad["]@PYad[commands]@PYad["]@PYZrb[], 
+                           as_name@PYbf[=]as_name)
+        @PYaz[else]:
+            @PYaz[raise] @PYaV[ImportError](@PYad["]@PYad[Invalid kind of import ]@PYbg[%s]@PYad[, ]@PYad["]
+                            @PYad["]@PYad[use only ]@PYad[']@PYad[recipe(...)]@PYad[']@PYad[ or ]@PYad["]
+                            @PYad["]@PYad[']@PYad[module(...)]@PYad[']@PYad["])
+
+        @PYaz[return] @PYaB[self]@PYbf[.]main
+\end{Verbatim}
+
+\end{code}
+
+There's nothing fancy going on there, other then after loading a recipe
+Vellum continues to process the imports.
+
+Since Vellum can load either other \file{*.vel} files or Python modules, it
+needs two methods to do that right named boringly \ident{load\_recipe} and
+\ident{load\_module}.
+
+
+\begin{code}{press.py:load recipe}{The Actual Recipe Loader}
+\begin{Verbatim}[commandchars=@\[\]]
+    @PYaz[def] @PYaL[load_recipe](@PYaB[self], @PYaY[file]):
+        @PYat["""]
+@PYat[        Loads a recipe and then calls self.load to get any]
+@PYat[        imports that are defined.]
+@PYat[        """]
+        @PYaz[if] @PYaY[file] @PYao[in] @PYaB[self]@PYbf[.]recipes:
+            @PYaz[return] @PYaB[self]@PYbf[.]recipes@PYZlb[]@PYaY[file]@PYZrb[]
+        @PYaz[else]:
+            @PYaz[with] @PYaY[open](@PYaY[file]) @PYaz[as] f:
+                spec @PYbf[=] vellum@PYbf[.]parser@PYbf[.]parse(@PYad[']@PYad[input]@PYad['], f@PYbf[.]read() @PYbf[+] @PYad[']@PYap[\0]@PYad['])
+                @PYaz[if] @PYao[not] spec:
+                    @PYaz[raise] @PYaV[ImportError](@PYad["]@PYad[Parser error in file: ]@PYbg[%s]@PYad["] @PYbf[%] @PYaY[file])
+                @PYaz[else]:
+                    @PYaz[return] spec
+\end{Verbatim}
+
+\end{code}
+
+Loading more recipes is very easy since \ident{Press} already handles much of
+the work itself.  This method just has to do the parsing.  The confusing part is
+that \ident{Press} uses \ident{load\_recipe} in the \ident{\_\_init\_\_} so that it
+can bootstrap itself, and then calls \ident{import} to do the rest.
+
+\begin{code}{press.py:load module}{The Python Module Loader}
+\begin{Verbatim}[commandchars=@\[\]]
+    @PYaz[def] @PYaL[load_module](@PYaB[self], name):
+        @PYat["""]
+@PYat[        Loads a python module and extracts all of the ]
+@PYat[        methods that are usable as Vellum commands.]
+@PYat[        It returns a dict with the commands.]
+@PYat[        """]
+        @PYaz[if] name @PYao[in] @PYaB[self]@PYbf[.]modules: @PYaz[return] @PYaB[self]@PYbf[.]modules@PYZlb[]name@PYZrb[]
+
+        sys@PYbf[.]path@PYbf[.]append(@PYaB[self]@PYbf[.]module_source)
+        mod @PYbf[=] @PYaY[__import__](name, @PYaY[globals](), @PYaY[locals]())
+
+        @PYaE[# stupid hack to work around __import__ not really importing]
+        components @PYbf[=] name@PYbf[.]split(@PYad[']@PYad[.]@PYad['])
+        @PYaz[for] comp @PYao[in] components@PYZlb[]@PYax[1]:@PYZrb[]:
+            mod @PYbf[=] @PYaY[getattr](mod, comp)
+
+        @PYaE[# now module is the actual module we actually requested]
+        commands @PYbf[=] {}
+        @PYaz[for] k,func @PYao[in] mod@PYbf[.]__dict__@PYbf[.]items():
+            @PYaz[if] @PYao[not] k@PYbf[.]startswith(@PYad["]@PYad[_]@PYad["]) @PYao[and] @PYaY[hasattr](func, @PYad["]@PYad[__call__]@PYad["]):
+                commands@PYZlb[]k@PYZrb[] @PYbf[=] func
+
+        sys@PYbf[.]path@PYbf[.]pop()
+        @PYaz[return] commands
+\end{Verbatim}
+
+\end{code}
+
+The Python module loading is an interesting hack which I'm sure can be improved
+with the \ident{imp} module.  First, it appends the \file{\~/.vellum/modules}
+path to the Python load path so that the \ident{\_\_import\_\_} call will find it.
+
+Reading the code however, you'll notice it has to do this strange recursive find
+of the actual module requested.  This is because Python doesn't load the module
+you asked for, but its entire parent chain going up.  I found this hack to get
+around it when reading about \ident{\_\_import\_\_}.
+
+Finally, \ident{load\_module} just rolls through all the functions in the module
+that don't start with an underscore and puts them in the \ident{commands} list.
+
+The remaining functions simply support merging together the dicts found in
+other recipes and transforming the names to give them a fake '.' scoping.
+
+\begin{code}{press.py:scope name}{Scopes A Name Properly}
+\begin{Verbatim}[commandchars=@\[\]]
+    @PYaz[def] @PYaL[scope_name](@PYaB[self], key, name@PYbf[=]@PYaB[None], as_name@PYbf[=]@PYaB[None]):
+        @PYat["""Does the common name scopings used."""]
+        name @PYbf[=] as_name @PYaz[if] as_name @PYaz[else] name
+        @PYaz[return] @PYad["]@PYbg[%s]@PYad[.]@PYbg[%s]@PYad["] @PYbf[%] (name, key) @PYaz[if] name @PYaz[else] key
+\end{Verbatim}
+
+\end{code}
+
+This makes fake scoping by flattening the name based on the given name, if an
+"as-name" was indicated, etc.
+
+\begin{code}{press.py:merge}{Merges Two Dicts With Scope}
+\begin{Verbatim}[commandchars=@\[\]]
+    @PYaz[def] @PYaL[merge](@PYaB[self], source, target, named@PYbf[=]@PYaB[None], as_name@PYbf[=]@PYaB[None]):
+        @PYat["""]
+@PYat[        Takes the source and target dicts and merges]
+@PYat[        their keys according to the way scope_name does]
+@PYat[        it.  Source is untouched.]
+@PYat[        """]
+        @PYaz[for] key,val @PYao[in] source@PYbf[.]items():
+            target@PYZlb[]@PYaB[self]@PYbf[.]scope_name(key,named,as_name)@PYZrb[] @PYbf[=] val
+\end{Verbatim}
+
+\end{code}
+
+Uses \ident{scope\_name} to create a merged dict.
+
+\begin{code}{press.py:join}{Joins Two Recipes}
+\begin{Verbatim}[commandchars=@\[\]]
+    @PYaz[def] @PYaL[join](@PYaB[self], source, target, named@PYbf[=]@PYaB[None], as_name@PYbf[=]@PYaB[None]):
+        @PYat["""]
+@PYat[        Takes two specs and properly joins them]
+@PYat[        using the self.merge() function on all]
+@PYat[        of the stanzas.]
+@PYat[        """]
+        @PYaE[# first merge the common dict style stanzas]
+        @PYaz[for] section @PYao[in] @PYZlb[]@PYad["]@PYad[targets]@PYad["], @PYad["]@PYad[options]@PYad["], @PYad["]@PYad[depends]@PYad["]@PYZrb[]:
+            @PYaz[if] section @PYao[in] source:
+                target@PYbf[.]setdefault(section, {})
+                @PYaB[self]@PYbf[.]merge(source@PYZlb[]section@PYZrb[], 
+                           target@PYZlb[]section@PYZrb[], named, as_name)
+\end{Verbatim}
+
+\end{code}
+
+Finally, \ident{join} intelligently combines two whole recipes merging the dicts
+that require namespaces.
+
+
+
+
+\section{Script}
+
+\ident{Script} does nothing more than take all the work \ident{Press} did and 
+resolve the dependencies for \ident{Scribe}.  This requires busting out the
+contents of \ident{Press.main}, traversing the flattened tree in
+\ident{depends}, and reducing them such that no target is repeated more than
+once in succession.
+
+The works is started by the \ident{resolve\_targets} method:
+
+\begin{code}{script.py:resolving all targets}{Where Script Starts}
+\begin{Verbatim}[commandchars=@\[\]]
+    @PYaz[def] @PYaL[resolve_targets](@PYaB[self], to_build@PYbf[=]@PYZlb[]@PYZrb[]):
+        @PYat["""]
+@PYat[        Given a list of targets to_build this will make]
+@PYat[        a new list with all of the dependencies resolved.]
+@PYat[        """]
+        @PYaz[if] @PYao[not] to_build: 
+            @PYaz[if] @PYad["]@PYad[default]@PYad["] @PYao[not] @PYao[in] @PYaB[self]@PYbf[.]options:
+                @PYaz[raise](@PYad["]@PYad[You forgot to specify a default target and didn]@PYad[']@PYad[t give one on the command line.]@PYad["])
+            @PYaz[else]:
+                @PYaz[return] @PYaB[self]@PYbf[.]resolve_depends(@PYaB[self]@PYbf[.]options@PYZlb[]@PYad["]@PYad[default]@PYad["]@PYZrb[])
+        @PYaz[else]:
+            building @PYbf[=] @PYZlb[]@PYZrb[]
+            @PYaz[for] target @PYao[in] to_build:
+                building@PYbf[.]extend(@PYaB[self]@PYbf[.]resolve_depends(target))
+            @PYaz[return] @PYaB[self]@PYbf[.]reduce_targets(building)
+\end{Verbatim}
+
+\end{code}
+
+Which uses \ident{resolve\_depends} to actually traverse the flattened
+dependency chains into something that can be run in order:
+
+\begin{code}{script.py:resolve depends}{Traverse The Depends}
+\begin{Verbatim}[commandchars=@\[\]]
+    @PYaz[def] @PYaL[resolve_depends](@PYaB[self], root):
+        @PYat["""]
+@PYat[        Recursively resolves the dependencies for the root]
+@PYat[        target given and return a list with those followed]
+@PYat[        by the root.]
+@PYat[        """]
+        building @PYbf[=] @PYZlb[]@PYZrb[]
+        @PYaz[if] root @PYao[in] @PYaB[self]@PYbf[.]depends:
+            @PYaz[for] dep @PYao[in] @PYaB[self]@PYbf[.]depends@PYZlb[]root@PYZrb[]:
+                @PYaz[if] dep @PYao[in] @PYaB[self]@PYbf[.]depends @PYao[and] @PYao[not] dep @PYao[in] building:
+                    building@PYbf[.]extend(@PYaB[self]@PYbf[.]resolve_depends(dep))
+                @PYaz[else]:
+                    building@PYbf[.]append(dep)
+        building@PYbf[.]append(root)
+        @PYaz[return] building
+\end{Verbatim}
+
+\end{code}
+
+
+Remember how I said that targets are reduced so that there are 
+no sequential duplicates, but that a target can be run more than 
+once if it's separated by different targets?  I found that I frequently wanted
+an entire target's process to run, and then the entire process for the next
+process to follow it.  This meant that while repeating a dependent target right after it
+ran was dumb, I still needed targets to run if they were separated by different
+targets:
+
+\begin{code}{script.py:reducing targets}{Removing Duplicates}
+\begin{Verbatim}[commandchars=@\[\]]
+    @PYaz[def] @PYaL[reduce_targets](@PYaB[self], building):
+        @PYat["""Given a list of targets this removes consecutive dupes."""]
+        last @PYbf[=] building@PYZlb[]@PYax[0]@PYZrb[]
+        reduced @PYbf[=] @PYZlb[]last@PYZrb[]
+        @PYaz[for] target @PYao[in] building@PYZlb[]@PYax[1]:@PYZrb[]:
+            @PYaz[if] target @PYbf[!=] last:
+                reduced@PYbf[.]append(target)
+                last @PYbf[=] target
+        @PYaz[return] reduced
+\end{Verbatim}
+
+\end{code}
+
+This code does that, and it could just be a simple \ident{set} instead,
+but when a set was used targets would run less reliably by missing
+targets that actually should be run again.  It sounds weird, but this actually
+makes the builds more robust at the cost of running some targets again.
+
+Let's use an example, say I have the two targets:
+
+\begin{description}
+\item[build] \verb|['generate' 'compile' 'link']|
+\item[docs] \verb|['generate' 'idiopidae' 'latex']|
+\item[release] \verb|['docs' 'build']|
+\end{description}
+
+Now, both of these run the \ident{generate} target because they independently
+need to make sure all the code generator source is processed and available,
+but if we run the \ident{release} target we mean to generate the documentation
+and build the software for a release.
+
+You would think it makes sense for \file{script.py} to resolve the dependencies 
+like this: 
+
+\verb|['generate' 'idiopidae' 'latex' 'docs' 'compile' 'link' 'build']|
+
+for the \ident{release} target, but what I found is that many of these commands
+can be destructive or set options that create different output that chokes later
+targets in other dependencies.  In the above example, what if we generate a
+parser file without debugging for documentation purposes in \ident{docs}?  Then
+when the resulting output reaches the \ident{build} target it will actually be
+the wrong source, so we want to run \ident{generate} again for build under the
+assumption that it changes.
+
+This is exactly why file-centric builds don't work as well as target-centric,
+and why each list of dependent targets has to stand alone.  Targets in
+later chains have to rely on their lists of targets being run in a
+consistent order, so if they are removed or screwed up in some way then you
+have brittle target chains.  A file centric build is {\bf not} going to
+rerun targets for later tasks because it assumes the target file is built
+correctly for {\bf all} targets.  The simple example above of debug vs.
+"clean" versions of a generated file are good examples.
+
+Rather than force people to make lots of different targets for inside various
+chains, Vellum simply decides to be more verbose or explicit and keep all
+targets in a dependency chain, even if they've been run earlier.  The only
+reliable exception is when a target is repeated immediately.  In this case it's
+safe to remove it.
+
+This also fits into why Vellum ignores targets it knows nothing about rather
+than report an error.  It makes the build easier to write and use since it's
+harmless to just not do something, and there's enough logging to see that a
+target did nothing.  In fact, the point of a build tool like Vellum is that you
+can run a single target on its own to see if it works.  If you didn't need this
+ability to run a target out of context then you could just use a simple shell
+script and skip all this software.
+
+That makes up the majority of \ident{Script} except for some methods for 
+showing it and the \ident{\_\_init\_\_} method.  You can read the code for those,
+but really you should be moving on to \ident{Scribe} to see how the
+meat of the application actually runs.
+
+
+
+\section{Scribe}
+
+The \ident{Scribe} class is where all the action happens for Vellum.  It takes
+the results of the parsing, structuring, and organizing of the previous steps
+and then executes what it is told in the right order.  In a way it's a poorly
+implemented virtual machine for Turing tar-pit language.  This means you should
+be able to understand it easily unlike a real virtual machine.
+
+Things start off like normal with the class definition and the initialization:
+
+\begin{code}{scribe.py:class Scribe}{Getting It All Going}
+\begin{Verbatim}[commandchars=@\[\]]
+@PYaz[class] @PYaO[Scribe](@PYaY[object]):
+    @PYat["""]
+@PYat[    Turns a build spec into something that can actually run.  Scribe]
+@PYat[    is responsible for taking the results from Script and loading]
+@PYat[    the extra commands out of ~/.vellum/modules so that you can run]
+@PYat[    it.]
+
+@PYat[    This is the equiv. of the component in an interpreter that]
+@PYat[    processes a cleaned and structured AST to execute it.]
+@PYat[    """]
+
+    @PYaz[def] @PYaL[__init__](@PYaB[self], script):
+        @PYaB[self]@PYbf[.]script @PYbf[=] script
+        @PYaB[self]@PYbf[.]options @PYbf[=] @PYaB[self]@PYbf[.]script@PYbf[.]options
+        @PYaB[self]@PYbf[.]target @PYbf[=] @PYaB[None]
+        @PYaB[self]@PYbf[.]line @PYbf[=] @PYax[1]
+        @PYaB[self]@PYbf[.]source @PYbf[=] os@PYbf[.]path@PYbf[.]expanduser(@PYad["]@PYad[~/.vellum/modules]@PYad["])
+        @PYaB[self]@PYbf[.]stack @PYbf[=] @PYZlb[]@PYZrb[]
+        @PYaB[self]@PYbf[.]commands @PYbf[=] @PYaB[self]@PYbf[.]script@PYbf[.]commands
+\end{Verbatim}
+
+\end{code}
+
+There are then some tiny methods for getting options, logging messages, and
+dying on errors:
+
+\begin{code}{scribe.py:support methods}{Misc. Support Gear}
+\begin{Verbatim}[commandchars=@\[\]]
+    @PYaz[def] @PYaL[option](@PYaB[self], name):
+        @PYat["""Tells if there's an option of this type."""]
+        @PYaz[return] @PYaB[self]@PYbf[.]options@PYbf[.]get(name,@PYaB[None])
+
+    @PYaz[def] @PYaL[log](@PYaB[self], msg):
+        @PYat["""]
+@PYat[        Logs a message to the screen, but only if "verbose"]
+@PYat[        option (not quiet).]
+@PYat[        """]
+        @PYaz[if] @PYaB[self]@PYbf[.]option(@PYad["]@PYad[verbose]@PYad["]): 
+            @PYaz[print] msg
+            sys@PYbf[.]stdout@PYbf[.]flush()
+
+    @PYaz[def] @PYaL[die](@PYaB[self], cmd, msg@PYbf[=]@PYad["]@PYad["]):
+        @PYat["""]
+@PYat[        Dies with an error message for the given command listing ]
+@PYat[        the target and line number in that target.]
+@PYat[        """]
+        @PYaz[if] @PYao[not] @PYaB[self]@PYbf[.]option(@PYad["]@PYad[keep_going]@PYad["]):
+            @PYaz[raise] DieError(@PYaB[self]@PYbf[.]target, @PYaB[self]@PYbf[.]line, cmd, msg)
+\end{Verbatim}
+
+\end{code}
+
+We then have a few methods that handle different aspects of the available
+targets.  Remember that targets are just a dict off the \verb|self.script|
+variable as \verb|self.script.targets| which we have \ident{Script} to thank for
+all it's work.  All we need to do is look them up in this dict and deal with
+them.
+
+\begin{code}{scribe.py:handling targets}{Is?, Body, and Parsing}
+\begin{Verbatim}[commandchars=@\[\]]
+    @PYaz[def] @PYaL[option](@PYaB[self], name):
+        @PYat["""Tells if there's an option of this type."""]
+        @PYaz[return] @PYaB[self]@PYbf[.]options@PYbf[.]get(name,@PYaB[None])
+
+    @PYaz[def] @PYaL[log](@PYaB[self], msg):
+        @PYat["""]
+@PYat[        Logs a message to the screen, but only if "verbose"]
+@PYat[        option (not quiet).]
+@PYat[        """]
+        @PYaz[if] @PYaB[self]@PYbf[.]option(@PYad["]@PYad[verbose]@PYad["]): 
+            @PYaz[print] msg
+            sys@PYbf[.]stdout@PYbf[.]flush()
+
+    @PYaz[def] @PYaL[die](@PYaB[self], cmd, msg@PYbf[=]@PYad["]@PYad["]):
+        @PYat["""]
+@PYat[        Dies with an error message for the given command listing ]
+@PYat[        the target and line number in that target.]
+@PYat[        """]
+        @PYaz[if] @PYao[not] @PYaB[self]@PYbf[.]option(@PYad["]@PYad[keep_going]@PYad["]):
+            @PYaz[raise] DieError(@PYaB[self]@PYbf[.]target, @PYaB[self]@PYbf[.]line, cmd, msg)
+\end{Verbatim}
+
+\end{code}
+
+The \ident{body\_of\_target} is just a convenience method for grabbing what the
+target represents.  After that \ident{is\_target} will safely tell \ident{Scribe}
+if this is a valid target.
+
+The real work of target management is in the \ident{parse\_target} where the
+target's body is analyzed to determine how to run it.   One of the things Vellum
+does is allow you to give a target's specification in a few ways.
+
+\begin{enumerate}
+\item A single \ident{string} or \ident{line string}.
+\item A single \ident{Reference} to a command to run.
+\item A \ident{list} combining any of the previous two.
+    \footnote{All commands should also support these combinations when it makes
+        sense, and specify when they don't.}
+\end{enumerate}
+
+The purpose of \ident{parse\_target} is to figure out via \ident{isinstance}
+calls whether the body of a target is one of these three situations.  The
+contract is that no matter what, \ident{parse\_target} will return an array of
+\ident{basestring} and/or \ident{Reference} objects.
+
+\ident{Scribe} must also manage commands that are allowed to operate during the
+later \ident{execute} and \ident{transition} phase of operation.  This turns out
+to be very simple thanks to \ident{Press} loading all the available commands as
+simple Python functions for us.
+
+\begin{code}{scribe.py:handling commands}{Command Finding}
+\begin{Verbatim}[commandchars=@\[\]]
+    @PYaz[def] @PYaL[is_command](@PYaB[self], name):
+        @PYat["""Tells the scribe if this name is an actual command."""]
+        @PYaz[return] @PYaY[callable](@PYaB[self]@PYbf[.]commands@PYbf[.]get(name, @PYaB[None]))
+
+    @PYaz[def] @PYaL[command](@PYaB[self], name, expr):
+        @PYat["""]
+@PYat[        Runs the command for the given name.  Pulls it out of the]
+@PYat[        self.commands.  Normally it just passes expr to the ]
+@PYat[        command, but if expr is a dict then it will call it]
+@PYat[        with **expr so you can do simpler kword commands.  If]
+@PYat[        you don't want this then you just define your command as]
+@PYat[        taking **args.]
+@PYat[        """]
+        @PYaz[try]:
+            to_call @PYbf[=] @PYaB[self]@PYbf[.]commands@PYZlb[]name@PYZrb[]
+        @PYaz[except] @PYaV[KeyError], err:
+            @PYaB[self]@PYbf[.]die(name, @PYad["]@PYad[Invalid command name ]@PYbg[%s]@PYad[, use -C to find out what]@PYad[']@PYad[s available.]@PYad["])
+
+        @PYaz[if] @PYaY[isinstance](expr, @PYaY[dict]):
+            @PYaz[return] to_call(@PYaB[self], @PYbf[*]@PYbf[*]expr)
+        @PYaz[else]:
+            @PYaz[return] to_call(@PYaB[self], expr)
+\end{Verbatim}
+
+\end{code}
+
+The \ident{command} method is fairly simple, as it just blows up with a
+\ident{die} call if you try to use a command that doesn't exist.  I actually
+think this might be better done by having it default to a die command that when
+called blows up like this, but for now this is more direct.
+
+What happens next is a bit of secret sauce that you will need to understand to
+find out how commands shown in Section \ref{appendixA:commands} work.  
+
+Remember
+from Section \ref{appendixA:parser} that a command is "invoked" using the
+\ident{Reference} class, so it has a name and a generic \python{expr} attribute.
+This means that your commands can take just about anything, but the point of
+having dicts in Vellum syntax is so that commands can
+be called with named parameters in the same way Smalltalk does it.  However,
+managing these keyword arguments in Python is best done using Python's built-in
+syntax.
+
+This leads to the last two lines above that, if the \python{expr} is a dict, it
+expands the dict out with \python{**expr} so that the method is called keyword
+argument style.  Take a look at \ref{appendixA:commands} and specifically the
+\ident{forall} function for a really good example.  They really just map right
+onto Python's existing syntax.
+
+\subsection{Target Execution}
+
+Targets are actually executed by three methods: \ident{execute},
+\ident{transition} and \ident{build}.  The \ident{execute} method does
+all the real work of incrementing line numbers and running each element of the
+list that \ident{parse\_target} returns.
+
+\begin{code}{scribe.py:execute target body}{Execute Each Target "Line"}
+\begin{Verbatim}[commandchars=@\[\]]
+    @PYaz[def] @PYaL[execute](@PYaB[self], body):
+        @PYat["""]
+@PYat[        Executes the body which can be anything parse_target() can]
+@PYat[        handle.  It properly handles the difference between a plain]
+@PYat[        string (shell command(s)) or a Reference (do some command),]
+@PYat[        or a list of those two.  Assumes you call self.start_target()]
+@PYat[        """]
+        @PYaz[for] cmd @PYao[in] @PYaB[self]@PYbf[.]parse_target(body):
+            @PYaz[if] @PYad["]@PYad[__builtins__]@PYad["] @PYao[in] @PYaB[self]@PYbf[.]options:
+                @PYaB[self]@PYbf[.]die(cmd, @PYad["]@PYad[Your command leaked __builtins__.]@PYad["]
+                         @PYad["]@PYad[Use scribe.push_scope and ]@PYad["]
+                         @PYad["]@PYad[scribe.pop_scope.]@PYad["])
+
+            @PYaB[self]@PYbf[.]line @PYbf[+]@PYbf[=] @PYax[1]
+            @PYaz[if] @PYaY[isinstance](cmd, Reference):
+                @PYaE[# Reference objects are indications to run some ]
+                @PYaE[# Python command rather than a shell.]
+                @PYaz[if] @PYaB[self]@PYbf[.]is_command(cmd@PYbf[.]name):
+                    @PYaE[# discontinue on True]
+                    @PYaz[if] @PYaB[self]@PYbf[.]command(cmd@PYbf[.]name, cmd@PYbf[.]expr): 
+                        @PYaB[self]@PYbf[.]log(@PYad["]@PYad[<-- ]@PYbg[%s]@PYad["] @PYbf[%] cmd)
+                        @PYaz[return]
+                @PYaz[else]:
+                    @PYaB[self]@PYbf[.]die(cmd, 
+                            @PYad["]@PYad[Invalid command reference, available ]@PYad["]
+                            @PYad["]@PYad[commands are:]@PYap[\n]@PYbg[%r]@PYad[.]@PYad["] @PYbf[%] 
+                            sorted(@PYaB[self]@PYbf[.]commands@PYbf[.]keys()))
+            @PYaz[else]:
+                @PYaE[# it's just shell]
+                cmd @PYbf[=] cmd@PYbf[.]strip()
+                @PYaz[if] cmd: @PYaB[self]@PYbf[.]command(@PYad["]@PYad[sh]@PYad["], cmd)
+\end{Verbatim}
+
+\end{code}
+
+This is the most complex method in \ident{Scribe} which determines if the line
+being run from a target's body is a \ident{Reference} or a string.  If it's a
+string then Vellum assumes that a shell command should run so
+\python{self.command("sh", cmd)} gets run to do that work.  Otherwise it's a
+\ident{Reference} which means to run some Python defined command function.
+
+
+\begin{code}{scribe.py:transition to target}{Target Transitions}
+\begin{Verbatim}[commandchars=@\[\]]
+    @PYaz[def] @PYaL[transition](@PYaB[self], target):
+        @PYat["""]
+@PYat[        The main engine of the whole thing, it will transition to]
+@PYat[        the given target and then process it's commands listed.  It]
+@PYat[        properly figures out if this is a command reference or a]
+@PYat[        plain string to run as a shell.]
+@PYat[        """]
+        @PYaz[if] @PYao[not] @PYaB[self]@PYbf[.]is_target(target): @PYaz[return]
+        @PYaB[self]@PYbf[.]line @PYbf[=] @PYax[0]
+        @PYaB[self]@PYbf[.]target @PYbf[=] target
+        body @PYbf[=] @PYaB[self]@PYbf[.]body_of_target(target)
+        @PYaB[self]@PYbf[.]execute(body)
+\end{Verbatim}
+
+\end{code}
+
+Targets are executed by the above \ident{transition} method, which does nothing
+more than combine calls to \ident{is\_target}, \ident{body\_of\_target} and
+\ident{execute} to make a target run in the right order with all the proper
+setup needed for \ident{Scribe} to report line numbers.
+
+Which leaves us with \ident{build} doing nothing more than using
+\ident{Script.resolve\_targets} on the requested build list and looping through
+them to make things go via \ident{transition}.
+
+\begin{code}{scribe.py:running all targets}{Running The Full Target List}
+\begin{Verbatim}[commandchars=@\[\]]
+    @PYaz[def] @PYaL[build](@PYaB[self], to_build):
+        @PYat["""]
+@PYat[        Main entry point that resolves the main targets for]
+@PYat[        those listed in to_build and then runs the results in order.]
+@PYat[        """]
+        building @PYbf[=] @PYaB[self]@PYbf[.]script@PYbf[.]resolve_targets(to_build)
+        @PYaB[self]@PYbf[.]log(@PYad["]@PYad[BUILDING: ]@PYbg[%s]@PYad["] @PYbf[%] building)
+        @PYaz[for] target @PYao[in] building:
+            @PYaB[self]@PYbf[.]log(@PYad["]@PYad[-->: ]@PYbg[%s]@PYad["] @PYbf[%] target)
+            @PYaB[self]@PYbf[.]transition(target)
+\end{Verbatim}
+
+\end{code}
+
+\subsection{String Interpolation}
+
+Vellum considers each of the various strings a Python dict based string
+interpolation template.  This means that if you have options with setting in
+them you can use those settings inside your shell commands and other strings
+like they're variables.
+
+\begin{code}{scribe.py:string handling}{Lame Pseudo-Variables That Work}
+\begin{Verbatim}[commandchars=@\[\]]
+    @PYaz[def] @PYaL[interpolate](@PYaB[self], cmd_name, expr):
+        @PYat["""]
+@PYat[        Takes a string expression and interpolates it]
+@PYat[        using the self.options dict as the % paramter.]
+@PYat[        It prints more useful errors than you'd normally]
+@PYat[        get from Python.]
+@PYat[        """]
+        err_name @PYbf[=] @PYad["]@PYbg[%s]@PYad[ ]@PYbg[%r]@PYad["] @PYbf[%] (cmd_name, expr)
+        @PYaz[try]:
+            @PYaz[return] expr @PYbf[%] @PYaB[self]@PYbf[.]options
+        @PYaz[except] @PYaV[ValueError], err:
+            @PYaB[self]@PYbf[.]die(err_name, @PYad["]@PYad[Expression has invalid format: ]@PYbg[%s]@PYad["] @PYbf[%] err)
+        @PYaz[except] @PYaV[KeyError], err:
+            @PYaB[self]@PYbf[.]die(err_name, @PYad["]@PYad[No key ]@PYbg[%s]@PYad[ for format, available keys are: ]@PYbg[%r]@PYad["] @PYbf[%] (err, sorted(@PYaB[self]@PYbf[.]options@PYbf[.]keys())))
+\end{Verbatim}
+
+\end{code}
+
+These work great as a kind of pseudo-variable syntax that's familiar with anyone
+who knows Python's dict string syntax:  \verb|'hi: %(name)s' % {"name": "Zed}|
+for producing \verb|'hi: Zed'|.  You can then use the same syntax in your shell
+commands and many arguments.
+
+
+\section{commands.py}
+\label{appendixA:commands}
+
+Vellum's commands are simply Python methods defined in \file{commands.py} which
+is self-documenting thanks to the documentation available via \verb|vellum -C|.
+Rather than go through every command, I'll assume you can just read the code at
+this point and figure out what it contains and how each one works.  I'll do a
+short discussion of the one command that is the most complex: \ident{forall}.
+
+\begin{code}{commands.py:forall}{The forall Command}
+\begin{Verbatim}[commandchars=@\[\]]
+@PYaz[def] @PYaL[forall](scribe, files@PYbf[=]@PYaB[None], do@PYbf[=]@PYZlb[]@PYZrb[], top@PYbf[=]@PYad["]@PYad[.]@PYad["], var@PYbf[=]@PYad["]@PYad[file]@PYad["]):
+    @PYat["""]
+@PYat[    Iterates the commands in a do block over all the files]
+@PYat[    matching a given regex recursively.  You can put anything]
+@PYat[    you'd put in a normal target in the do block to be executed,]
+@PYat[    and when it is executed the 'var' variable is set to the]
+@PYat[    full path of each file.  This will also be in each task]
+@PYat[    you transition to with the 'needs' command.]
+
+@PYat[    forall assumes that you want the variable to be 'file']
+@PYat[    so for most tasks you can leave that option out.  If you]
+@PYat[    nest forall expressions then you'll need to give each one]
+@PYat[    a different name (just like in a real language).]
+
+@PYat[    Usage: forall(files "*.py" var "file" do @PYZlb[] ... @PYZrb[])]
+@PYat[    """]
+    scribe@PYbf[.]log(@PYad["]@PYad[forall: files ]@PYbg[%r]@PYad[ top ]@PYbg[%r]@PYad[ var ]@PYbg[%r]@PYad["] @PYbf[%] (files, top, var))
+    @PYaz[if] @PYao[not] files:
+        scribe@PYbf[.]die(@PYad["]@PYad[forall]@PYad["], @PYad["]@PYad[Must give a file matching ]@PYad["]
+                   @PYad["]@PYad[pattern in parameter ]@PYad[']@PYad[files]@PYad[']@PYad[.]@PYad["])
+
+    matches @PYbf[=] @PYZlb[]@PYZrb[]
+    @PYaz[for] path, dirs, fnames @PYao[in] os@PYbf[.]walk(top):
+        paths @PYbf[=] (os@PYbf[.]path@PYbf[.]join(path,f) @PYaz[for] f @PYao[in] fnames)
+        matches@PYbf[.]extend(fnmatch@PYbf[.]filter(paths, files))
+
+    scribe@PYbf[.]log(@PYad["]@PYad[forall: matched ]@PYbg[%d]@PYad[ files.]@PYad["] @PYbf[%] @PYaY[len](matches))
+    @PYaz[for] f @PYao[in] matches:
+        scribe@PYbf[.]push_scope({var: f, @PYad["]@PYad[files]@PYad["]: matches, @PYad["]@PYad[var]@PYad["]: var})
+        scribe@PYbf[.]execute(do)
+        scribe@PYbf[.]pop_scope()
+\end{Verbatim}
+
+\end{code}
+
+The \ident{forall} command takes a series of keyword arguments and then works on
+them to iterate a given block.  Unlike other commands it expects a list of
+things to run, and then simply runs them on each file found.  It uses
+\ident{Scribe's} scoping methods to make sure that the called target bodies are
+not able to mess up the main \ident{options} dict, and then it just calls
+\ident{Scribe.execute}.
+
+This is the most complex command, but hopefully you can understand it.  Refer
+back to the previous sections to see what each of those methods does.
+
+Another command to review the \ident{cd} command as it shows how to properly
+scope a whole block of commands inside a chdir call.
+
+
+\begin{code}{commands.py:cd}{The cd Command}
+\begin{Verbatim}[commandchars=@\[\]]
+@PYaz[def] @PYaL[cd](scribe, to@PYbf[=]@PYaB[None], do@PYbf[=]@PYZlb[]@PYZrb[]):
+    @PYat["""]
+@PYat[    Temporarily changes to a given directory and then runs the]
+@PYat[    block in that directory.  When it's done it pops back to the]
+@PYat[    previous directory.]
+@PYat[    """]
+    scribe@PYbf[.]log(@PYad["]@PYad[ cd: ]@PYbg[%s]@PYad["] @PYbf[%] to)
+    to @PYbf[=] scribe@PYbf[.]interpolate(@PYad["]@PYad[to]@PYad["], to)
+
+    @PYaz[if] @PYao[not] to: 
+        scribe@PYbf[.]die(@PYad["]@PYad[cd]@PYad["], @PYad["]@PYad[Must specify to parameter to cd into.]@PYad["])
+    @PYaz[elif] @PYao[not] os@PYbf[.]path@PYbf[.]exists(to):
+        scribe@PYbf[.]die(@PYad["]@PYad[cd]@PYad["], @PYad["]@PYad[Target chdir path ]@PYad[']@PYbg[%s]@PYad[']@PYad[ does not exist.]@PYad["] @PYbf[%] to)
+
+    curdir @PYbf[=] os@PYbf[.]path@PYbf[.]abspath(os@PYbf[.]path@PYbf[.]curdir)
+    @PYaz[try]:
+        os@PYbf[.]chdir(to)
+        scribe@PYbf[.]push_scope({@PYad["]@PYad[parent]@PYad["]: curdir})
+        scribe@PYbf[.]execute(do)
+        scribe@PYbf[.]pop_scope()
+    @PYaz[finally]:
+        os@PYbf[.]chdir(curdir)
+\end{Verbatim}
+
+\end{code}
+
+Taking a look at this, it simply preserves the current directory, then attempts
+the code block inside a push/pop of the scope.  Notice this block of code is
+close to the one in \ident{forall} so it could be abstracted further.  Also
+notice that it doesn't try to pop the scope off if there's an exception.  This
+is on purpose so that the \ident{options} dict at that moment can be inspected.
+It does do the chdir back though.
+
+
+\chapter{Converting From Make}
+\label{chapter:Converting}
+
+
+
+\section{How Make Differs}
+
+
+\section{Untangling The Magic}
+
+
+\section{Bringing The Magic Back}
+
+
+\section{Sometimes, Make Is Best}
+
+\end{document}
+
+

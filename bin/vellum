@@ -1,0 +1,7 @@
+#!/usr/bin/env python
+# Copyright (C) Zed A. Shaw, licensed under the GPLv3
+import sys
+import vellum.bin
+
+vellum.bin.run(sys.argv[1:])
+

@@ -1,0 +1,8 @@
+include *.py
+include build.vel
+include CHANGES
+include LICENSE
+include NOTES
+recursive-include tests *.py *.html
+recursive-include scripts *.py *.vel
+recursive-include vellum *.py *.g

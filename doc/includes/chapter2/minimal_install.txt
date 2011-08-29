@@ -1,0 +1,8 @@
+zedshaw@monstrosity[~]|119> sudo easy_install zapps vellum
+Searching for zapps
+...
+Installed /usr/lib/python2.5/site-packages/zapps-0.X-py2.5.egg
+...
+Installed /usr/lib/python2.5/site-packages/vellum-0.X-py2.5.egg
+Processing dependencies for vellum
+Finished processing dependencies for vellum

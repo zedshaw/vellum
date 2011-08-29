@@ -1,0 +1,23 @@
+options(default "hello")
+
+imports[] 
+
+depends(
+    hello ['py.hello']
+)
+
+targets(
+    hello [
+        $ echo 'hi'
+        $ echo 'hello again'
+        $ date
+    ]
+
+    py.hello [
+        py [ 
+            |print 'hello from python'
+            |print globals()
+        ]
+        $ echo "i'm a shell command"
+    ]
+)

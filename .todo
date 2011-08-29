@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<todo version="0.1.20">
+    <note priority="medium" time="1207528199">
+        Implement a better shell.
+    </note>
+    <note priority="medium" time="1207528209" done="1208011948">
+        Create a dynamic commands setup.
+    </note>
+    <note priority="medium" time="1207528231" done="1207532878">
+        Create a task that makes a vellum standalone python script.
+    </note>
+    <note priority="medium" time="1207528280" done="1207840046">
+        Convert all my other builds to the new format.
+    </note>
+    <note priority="medium" time="1207532888" done="1208733672">
+        use squeeze instead of my ghetto shit
+    </note>
+    <note priority="medium" time="1207839480" done="1208208350">
+        register in the cheeseshop
+    </note>
+    <note priority="medium" time="1207840034" done="1208653958">
+        perform a reduction or convert the list of build targets to a set
+    </note>
+    <note priority="medium" time="1208208369" done="1208659098">
+        consider using decorators on command functions to register them.
+    </note>
+    <note priority="medium" time="1208208384" done="1208659106">
+        look at just using regular import and not doing it myself in scribe
+    </note>
+    <note priority="medium" time="1208208400" done="1208659112">
+        implement an import that does either .vel or .py
+    </note>
+    <note priority="medium" time="1208652175" done="1208669922">
+        do an inverse search so you can give a patter for a type of command and it prints the targets calling that
+    </note>
+    <note priority="medium" time="1208652208">
+        need to be able to load variable with lists of files and then use those lists in later commands in a target
+    </note>
+    <note priority="medium" time="1208659608">
+        add a command to check for file changes, and also have forall take an option to skip ones that haven't changed
+    </note>
+    <note priority="medium" time="1208663314" done="1208669933">
+        find out why gen prints out all those python things
+    </note>
+    <note priority="medium" time="1208718853" done="1209130486">
+        make a cwd command for dropping into lower directories
+    </note>
+    <note priority="medium" time="1208718873">
+        have bin.run look for a build.vel file going up to the user's HOME at least.
+    </note>
+    <note priority="medium" time="1208735860" done="1209130496">
+        have py command setup script and scribe as global vars
+    </note>
+    <note priority="medium" time="1208735878" done="1209130509">
+        make module imports keep the module around so that py can use it
+    </note>
+</todo>

@@ -1,0 +1,4 @@
+This project is dead.  I wrote it as a simple build tool I needed for 
+my Python projects, but it was at a time when nobody in the python world
+installed packages.  I don't use it much anymore since I do Lua for 
+fun now, but feel free to fork it and improve it.

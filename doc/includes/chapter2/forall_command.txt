@@ -1,0 +1,16 @@
+zedshaw@timmy[chapter2]|1> vellum -C forall
+forall:
+    Iterates the commands in a do block over all the files
+    matching a given regex recursively.  You can put anything
+    you'd put in a normal target in the do block to be executed,
+    and when it is executed the 'var' variable is set to the
+    full path of each file.  This will also be in each task
+    you transition to with the 'needs' command.
+
+    forall assumes that you want the variable to be 'file'
+    so for most tasks you can leave that option out.  If you
+    nest forall expressions then you'll need to give each one
+    a different name (just like in a real language).
+
+    Usage: forall(files "*.py" var "file" do [ ... ])
+    

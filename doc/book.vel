@@ -1,0 +1,28 @@
+options (
+        junk_files "manual-final.* *.aux *.log styles/*.aux"
+        final "manual-final"
+        source "manual"
+)
+
+depends (
+        release [ 'book.draft' ]
+)
+
+targets (
+        draft cd(to "doc" do [
+            $ idio %(book.source)s.tex > %(book.final)s.tex
+            $ latex -halt-on-error %(book.final)s.tex
+            $ dvipdf %(book.final)s.dvi
+        ])
+
+        view 
+            cd(to "doc" do 'evince %(book.final)s.pdf')
+
+        clean cd(to "doc" do [
+            $ rm -f %(book.junk_files)s %(book.source)s.pdf
+        ])
+
+        release [
+            $ cp doc/%(book.final)s.pdf %(website)s
+        ]
+)

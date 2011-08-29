@@ -1,0 +1,70 @@
+# Copyright (C) 2008 Zed A. Shaw.  You're free to reuse this file
+# in your build scripts in anyway and remove the copyright 
+# notice.
+
+### @export "main" python
+# This is a working build spec, but it is also an example
+# so it consists of a lot more stuff than you would normally
+# find in a real project.
+
+imports [
+    recipe(from 'scripts/testing' as 'testing')
+    recipe(from 'scripts/dist' as 'dist')
+    recipe(from 'scripts/sample' as 'sample')
+    recipe(from 'doc/book' as 'book')
+]
+
+options(
+        project "vellum"
+        default 'tests'
+        sudo 'sudo'
+        version '0.17'
+        website '../zedshaw.com/output/projects/vellum'
+        bzr.revision '.bzr/branch/last-revision'
+        version.file 'vellum/version.py'
+
+        setup(
+            name 'vellum'
+            version '0.17'
+            author 'Zed A. Shaw'
+            description 'A flexible small make alternative for Python programmers.'
+            author_email 'zedshaw@zedshaw.com'
+            url 'http://www.zedshaw.com/projects/vellum'
+            packages ['vellum']
+            scripts ['bin/vellum']
+        )
+)
+
+depends(
+        build ['tests' 'version.gen' 'dist.install' 'dist.sdist']
+        commit ['dist.gen.setup' 'parser' 'dist.clean' 'book.clean']
+        tests ['parser' 'testing.run']
+        release ['build' 'dist.release' 'book.release' ]
+)
+
+targets(
+        commit [
+            $ bzr log --short > CHANGES
+            $ bzr commit
+            $ bzr push
+        ]
+
+        version.gen [
+            py [
+                |rev = open("%(bzr.revision)s").read().split()
+                |ver = {"version": version, "rev": rev}
+                |open("%(version.file)s", 'w').write(
+                |    "VERSION=" + repr(ver))
+            ]
+        ]
+
+        parser "zapps vellum/parser.g"
+
+        dist $ cp doc/manual-final.pdf %(website)s
+
+        cloc [
+           $ cloc --report-file=doc/test_cloc.txt --no3 --by-file tests
+           $ cloc --report-file=doc/source_cloc.txt --no3 --by-file --force-lang=python,g vellum bin
+           $ cat doc/*_cloc.txt
+        ]
+)

@@ -1,0 +1,384 @@
+  128 Zed A. Shaw	2008-04-29
+      Some cleanup of chapter 1 and more writing introducing Vellum.
+
+  127 Zed A. Shaw	2008-04-29
+      Mostly edited the Appendix A code walk and then cleaned up a few source formatting issues that showed up in the book.
+
+  126 Zed A. Shaw	2008-04-28
+      Further fix to forall that actually works.  Unit test was not actually running the for loop because the regex format had changed when I moved to fnmatch.  Should work fine now.
+
+  125 Zed A. Shaw	2008-04-28
+      Small fix for the forall.
+
+  124 Zed A. Shaw	2008-04-28
+      A lot of changes to continue editing the book which now has a complete Appendix A walk through all of the code.
+
+  123 Zed A. Shaw	2008-04-27
+      Removed a book.clean that was removing the TOC and other lists.  Switched to emacs colors to fuck with people.
+
+  122 Zed A. Shaw	2008-04-26
+      Added more targets to book.vel for distributing the book to the website and for breaking out the viewing of the pdf from the generation of it.  Now that vellum has a --watch option I don't need it to automatically evince the pdf.
+
+  121 Zed A. Shaw	2008-04-26
+      Vesion bump and a small change to Script.show to sort the keys of the targets.
+
+  120 Zed A. Shaw	2008-04-26
+      More work on the manual with better literate programming style description of the source in appendix A, including a nice walk through the design and a good walk through the grammar.
+
+  119 Zed A. Shaw	2008-04-26
+      Removed uneeded code from the grammar that was passing down elements rather than relying on the production to make the data structure.
+
+  118 Zed A. Shaw	2008-04-25
+      More work on chapter2, a bit of tweaking of what's already written.
+
+  117 Zed A. Shaw	2008-04-25
+      First part of chapter 2 done, needs to be edited though.
+
+  116 Zed A. Shaw	2008-04-25
+      Work on chapter 2 describing the install.
+
+  115 Zed A. Shaw	2008-04-25
+      Cleaned up the book includes layout.
+
+  114 Zed A. Shaw	2008-04-25
+      Started the next chapter of the book, and in the process needed to streamline the install procedure.  This meant making a standardized build for all my projects and putting them in the cheese shop.
+
+  113 Zed A. Shaw	2008-04-24
+      Started the "Starting" chapter of the book and ran into a snag with require dependencies.
+
+  112 Zed A. Shaw	2008-04-24
+      Fixed a few grammar typos I always make.
+
+  111 Zed A. Shaw	2008-04-24
+      Implements an initial version of the "watch" feature that tells vellum to watch a file for changes, and if it detects a change to rerun a list of targets.
+
+  110 Zed A. Shaw	2008-04-24
+      First two chapters of the Vellum book all done and ready for people to review, plus the start of the code walkthrough.
+
+  109 Zed A. Shaw	2008-04-24
+      Initial support for watching a file and rerunning build targets.
+
+  108 Zed A. Shaw	2008-04-22
+      Getting closer to a nice book creation setup.  Most everything is run correctly by build.vel.  I can select various pygments styles from doc/styles.  It uses dvipdf for now so that DRAFT is on each page.  It has full idiopidae working.
+
+  107 Zed A. Shaw	2008-04-22
+      Manual now has environments and commands configured for nice importing of code and referencing the files the code comes from.
+
+  106 Zed A. Shaw	2008-04-22
+      Playing around with the book setup and fonts and stuff.  Ignore everything written in the text, it's just to dork with the layouts.
+
+  105 Zed A. Shaw	2008-04-21
+      Corrects the py command so that the scribe.options becomes the *locals* and the current globals are the globals() in the exec.  This gives you access to all the available modules and goodies in your py.
+
+  104 Zed A. Shaw	2008-04-21
+      Better formatting for gen and forall.
+
+  103 Zed A. Shaw	2008-04-21
+      Further testing of commands revealed that gen wasn't tested.  Fixed that up.  Made the book.vel do more stuff.
+
+  102 Zed A. Shaw	2008-04-21
+      Completes the cd command, and refactors the command calling convention so that if the expression argument is a hash then **kw args are used in the call.  This make writing commands a lot easier.
+
+  101 Zed A. Shaw	2008-04-21
+      Tweaked the py command to add scribe and script variables.  Added a new cd command that will scope changing to another directory to do stuff.  Created a sub build of doc/book.vel for the book building stuffs.
+
+  100 Zed A. Shaw	2008-04-20
+      Looks like the dynamic __import__ means that you can't do a standlone script without some hackery.
+
+   99 Zed A. Shaw	2008-04-20
+      Slight formatting tweak for gen
+
+   98 Zed A. Shaw	2008-04-20
+      Nope, squeeze would take too much work.
+
+   97 Zed A. Shaw	2008-04-20
+      Using squeeze to create a functioning standalone script, minus zapps.
+
+   96 Zed A. Shaw	2008-04-20
+      Quickly fixed the squeeze.py script so that it works well enough to make a standalone vellum script.
+
+   95 Zed A. Shaw	2008-04-20
+      Using LaTeX to do the manual instead of wiki text.
+
+   94 Zed A. Shaw	2008-04-20
+      Fixed the problem where gen would print __builtins__.  Just needed to add scope for the py command.  Created an initial search command line option for -S which will help find anything that mentions a regex.
+
+   93 Zed A. Shaw	2008-04-19
+      Left some testing junk in build.vel.
+
+   92 Zed A. Shaw	2008-04-19
+      Implements combining stderr+stdout on the sh subprocesses so that all output can be captured without screwing up the regular output.  This makes it easier to see where an error actually happened.
+
+   91 Zed A. Shaw	2008-04-19
+      Cleaned up the logging in the commands so that it is a little easier to read and more consistent.
+
+   90 Zed A. Shaw	2008-04-19
+      By default always load the vellum.commands since we always need these.
+
+   89 Zed A. Shaw	2008-04-19
+      Brings back the search for modules and recipes in ~/.vellum/modules and ~/.vellum/recipes/.  Cleans up the dry_run setting so that it prints out what it would do for each command.
+
+   88 Zed A. Shaw	2008-04-19
+      Implement finding vellum .vel files in the current location or the source location and also adding .vel to the end if not there.
+
+   87 Zed A. Shaw	2008-04-18
+      Make forall more convenient by assuming 'file' as the variable and go back to using regular re rather than fnmatch.
+
+   86 Zed A. Shaw	2008-04-18
+      Used the wrong exception on load errors.  Need to have tests for the exception cases.
+
+   85 Zed A. Shaw	2008-04-18
+      Fixed a small documentation error in the --help for -f.
+
+   84 Zed A. Shaw	2008-04-18
+      Change needed to allow for an as name on module import.
+
+   83 Zed A. Shaw	2008-04-18
+      Complete refactoring of the Press class in order to make it recursively operate.
+
+   82 Zed A. Shaw	2008-04-17
+      Simplify some bad code to do less looping.
+
+   81 Zed A. Shaw	2008-04-17
+      Switch to using a set to track what has been imported already.
+
+   80 Zed A. Shaw	2008-04-17
+      Switched up the imports/modules section to be a bit more explicit and in one spot which is much cleaner.
+
+   79 Zed A. Shaw	2008-04-16
+      Included a little task that spits out the SLOC with cloc.
+
+   78 Zed A. Shaw	2008-04-16
+      Added copyright statements and GPLv3 statements to all the source.
+
+   77 Zed A. Shaw	2008-04-16
+      This implements a very nice self-documenting command feature that prints out the commands a build is using and their doc comments.
+
+   76 Zed A. Shaw	2008-04-16
+      Implements the command listing features which will list all commands that are imported into a vellum build including their doc comments.
+
+   75 Zed A. Shaw	2008-04-16
+      Contains a new target testing.noop for using in test cases.
+
+   74 Zed A. Shaw	2008-04-16
+      Removing clean as a sample target used in testing speeds it up quite a lot. (duh).
+
+   73 Zed A. Shaw	2008-04-16
+      Shell test had the wrong options settings.
+
+   72 Zed A. Shaw	2008-04-15
+      Gets version right and commands to print out, but still not the ideal format or structure.
+
+   71 Zed A. Shaw	2008-04-15
+      Added a new symbol for line strings of '|' so that you can do >,$ or | for appearance.  Primarily used with python code snippets.
+
+   70 Zed A. Shaw	2008-04-15
+      Cleaned up the commands, fixing a bug with py() and adding the ability to give a list of strings to sh, py, and most other commands that took just strings.  Added tests to make sure that works and then created a task that generates the vellum/version.py from the current version and the bzr revision information.  Finally, added command line options for -C to list commands and -v to print this new version string.
+
+   69 Zed A. Shaw	2008-04-15
+      Removed the static vellum script for now.
+
+   68 Zed A. Shaw	2008-04-15
+      Added some more documentation comments.
+
+   67 Zed A. Shaw	2008-04-15
+      Implements refactoring the module loading so that it's explicitly done in a modules section of the build.vel and uses normal python module loading so you can import modules from anywhere in the regular python path.
+
+   66 Zed A. Shaw	2008-04-15
+      Going to do a better standalone vellum script with squeeze
+
+   65 Zed A. Shaw	2008-04-15
+      A few more tests for the new stuff in scribe.
+
+   64 Zed A. Shaw	2008-04-15
+      Fully working forall (made more sense than foreach) including a primitive push/pop of the options on a stack.  Fixes a small bug in the commands and scribe and updates the documentation as well.
+
+   63 Zed A. Shaw	2008-04-14
+      Implemented first cut of foreach command, and also made sure it works as a module.  Improved string interpolate method in scribe so that commands don't do it wrong.
+
+   62 Zed A. Shaw	2008-04-14
+      Manifest didn't include .vel files, bug in scribe that didn't go to 0.11, version bump.
+
+   61 Zed A. Shaw	2008-04-13
+      Refactoring so that people who implement commands can use parts of Scribe to run commands they generate.
+
+   60 Zed A. Shaw	2008-04-13
+      Added full comments to everything.
+
+   59 Zed A. Shaw	2008-04-13
+      More complete tests of all the command line operations and the arguments that trigger them.
+
+   58 Zed A. Shaw	2008-04-13
+      Moved the majority of code in bin/vellum into vellum/bin.py so tests can be written for it or other people can use it outside of vellum.
+
+   57 Zed A. Shaw	2008-04-11
+      Updated changelog and finally pushed to remote.
+
+   56 Zed A. Shaw	2008-04-11
+      Put an empty README in for now.
+
+   55 Zed A. Shaw	2008-04-11
+      Implemented automatic loading of modules out of ~/.vellum/modules and placing them in a namespace so they can be used in specs
+
+   54 Zed A. Shaw	2008-04-11
+      Tested out the remaining stock commands of install and mkdirs.
+
+   53 Zed A. Shaw	2008-04-11
+      Added a new file for testing the commands, and got vellum to reduce the tasks in the build list to remove sequential dupes.
+
+   52 Zed A. Shaw	2008-04-10
+      Need the samples.vel for testing and playing with vellum.
+
+   51 Zed A. Shaw	2008-04-10
+      First cut of working commands that are taken out of vellum/commands.py.  This will become the module system eventually.
+
+   50 Zed A. Shaw	2008-04-10
+      Started pulling out the commands that you can use and putting them into a module.  Commands are now dynamically loaded out of vellum/commands.py as a module/function pair and run.  This will then become the mechanism for you to write your own commands.
+
+   49 Zed A. Shaw	2008-04-09
+      Just before releasing 0.10.
+
+   48 Zed A. Shaw	2008-04-09
+      Version number bump.
+
+   47 Zed A. Shaw	2008-04-09
+      First version with the new fancier and simpler build description format.  That'll teach those bastards to have double standards. :-)
+
+   46 Zed A. Shaw	2008-04-09
+      new converted build scripts to the vel format
+
+   45 Zed A. Shaw	2008-04-09
+      First cut at a nice new clean less typing syntax.
+
+   44 Zed A. Shaw	2008-04-06
+      Uses some shell hackery to make a standalone vellum script.  Will switch to squeeze when I can figure out how to do everything but the compression part.  Added a devtodo .todo file for tracking what needs to be done.scripts/vellum is the standalone and can actually install vellum on its own.
+
+   43 Zed A. Shaw	2008-04-05
+      Slight change to the description for setup.py.
+
+   42 Zed A. Shaw	2008-04-05
+      Implements a simple shell for running multiple commands without leaving vellum.
+
+   41 Zed A. Shaw	2008-04-05
+      A fake target of sample_commands shows how each one is used and that's used in the tests.  Error reporting was improved.
+
+   40 Zed A. Shaw	2008-04-05
+      Commands work very well and you can use a name reference as another target name.
+
+   39 Zed A. Shaw	2008-04-05
+      Implemented the gen command to generate simple templates based on the options settings.
+
+   38 Zed A. Shaw	2008-04-05
+      Implements the command system that replaces the original syntax.
+
+   37 Zed A. Shaw	2008-04-05
+      Vellum's build can now generate the setup.py
+
+   36 Zed A. Shaw	2008-04-05
+      Fixed up a deadly embrace on imports and made bin/vellum work with the new code layout.
+
+   35 Zed A. Shaw	2008-04-05
+      Reorg the code so that each component is in its own file, now that it's getting larger.
+
+   34 Zed A. Shaw	2008-04-05
+      Improved the tests and added an option to dump a raw build file as Pure python.
+
+   33 Zed A. Shaw	2008-04-05
+      Had to clean up the setup.py dist config so that it includes all the new files.
+
+   32 Zed A. Shaw	2008-04-05
+      Spelled version wrong in build.py so could do a dist.
+
+   31 Zed A. Shaw	2008-04-05
+      New location for the included build scripts dist.py and testing.py.
+
+   30 Zed A. Shaw	2008-04-05
+      Fully functional parser and loading scheme that can load with names as new names, recursive loads, and load from a ~/.vellum dir.
+
+   29 Zed A. Shaw	2008-04-05
+      Cleaned up a bit of the coagulate process in order to have the parser cleaner and leaner.
+
+   28 Zed A. Shaw	2008-04-05
+      First build that actually works with the new fancy pythonic parser for vellum build files.
+
+   27 Zed A. Shaw	2008-04-03
+      First cut at a parser that parses python syntax into a structure without running anything.
+
+   26 Zed A. Shaw	2008-04-02
+      Small changes to match PEP-08 where I could see it.
+
+   25 Zed A. Shaw	2008-04-01
+      Version bump to 0.7 for today's last release.
+
+   24 Zed A. Shaw	2008-04-01
+      Implement an option to restrict loading to only YAML files so that you can catch people trying to inject code into the build.
+
+   23 Zed A. Shaw	2008-04-01
+      Forgot the log statement as a function for python people.
+
+   22 Zed A. Shaw	2008-04-01
+      Updated the python example build.py to reflect the yaml file's structure.
+
+   21 Zed A. Shaw	2008-04-01
+      Added a bunch more docs and expanded testing.py to give more examples of the function clothes I've dressed Vellum syntax in.
+
+   20 Zed A. Shaw	2008-04-01
+      Updated change log and version bump for setup.py.
+
+   19 Zed A. Shaw	2008-04-01
+      This gives the Pythonistas their fancy () clothes and makes them stop trembling.  Also fixes a little bug in using __import__ instead of execfile, and makes verbose actually work.
+
+   18 Zed A. Shaw	2008-04-01
+      This uses execfile to fill in a spec via the globals arg rather than trying to import a module.
+
+   17 Zed A. Shaw	2008-04-01
+      Distutils was not picking up the new yaml files.
+
+   16 Zed A. Shaw	2008-04-01
+      Started automatically tracking changes from the bzr log into the CHANGES file.  Prints out the default target when you do -T.
+
+   15 Zed A. Shaw	2008-04-01
+      Now supports yaml or python through and through.  This means that imports can be python or yaml, and you can refer to them with or without the .py, .yml, or .yaml extension.
+
+   14 Zed A. Shaw	2008-03-31
+      Simple change to get vellum to push itself to my website.
+
+   13 Zed A. Shaw	2008-03-31
+      Implemented a rudimentary recipes system that loads other files into the spec and gives them a namespace.
+
+   12 Zed A. Shaw	2008-03-31
+      Overhaul of the code to make it more testable and to prep for adding the recipes features.
+
+   11 Zed A. Shaw	2008-03-30
+      Sample files to play with for the recipes stuff.
+
+   10 Zed A. Shaw	2008-03-30
+      First playing with a recipes/import system for the vellum scripts.
+
+    9 Zed A. Shaw	2008-03-30
+      Vellum now takes a .yml or a .py file as the input.  The .py must be giving with -f though for now.
+
+    8 Zed A. Shaw	2008-03-30
+      Slight formatting problem in run_test.
+
+    7 Zed A. Shaw	2008-03-30
+      Forgot to change the notes.
+
+    6 Zed A. Shaw	2008-03-30
+      Forgot to implement the -F option.
+
+    5 Zed A. Shaw	2008-03-30
+      First cut at doing the tests.  Looks pretty good and works, but should include some of os.path for convenience.
+
+    4 Zed A. Shaw	2008-03-30
+      Change so that commit target pushes also.
+
+    3 Zed A. Shaw	2008-03-30
+      First commit with a complete setup.py build, and a vellum build.yml that can run that to do the build and dist.
+
+    2 Zed A. Shaw	2008-03-29
+      first port of idiopidae's setup utils config to start vellum as a real project
+
+    1 Zed A. Shaw	2008-03-29
+      first vellum commit
+
